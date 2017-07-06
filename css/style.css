@@ -18,6 +18,9 @@ body * {
 #menu-screen {
   display: flex;
   justify-content: center;
+  background-color: azure;
+  padding: 20px;
+  border-radius: 7px;
 }
 
 .game-options {

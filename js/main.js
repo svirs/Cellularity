@@ -10,19 +10,52 @@ const menuGlobalValues = {
     z: null
   }
 };
+//pointerLockApi is global
+const pointerLockApi = ( () => {
+  const _pointerLockKeys = ['doc', 'change', 'request', 'exit', 'error'];
+  const _pointerLockValues = [
+    ['pointerLockElement', 'pointerlockchange', 'requestPointerLock', 'exitPointerLock', 'pointerlockerror'],
+    ['webkitPointerLockElement', 'webkitpointerlockchange', 'webkitRequestPointerLock', 'webkitExitPointerLock', 'webkitpointerlockerror'],
+    ['mozPointerLockElement', 'mozpointerlockchange', 'mozRequestPointerLock', 'mozExitPointerLock', 'mozpointerlockerror']
+  ].filter( arr => arr[0] in document ).shift();
+  if (_pointerLockValues){
+    return Object.assign({}, ..._pointerLockKeys.map((key, i) => ( {[key]: _pointerLockValues[i]})));
+  } else {
+    return null;
+  }
+} )();
+//
+const gameGlobalValues = {
+  canMove: false,
+  pointerLocker: document.body,
+  movingForward: false,
+  movingBackward: false,
+  rotateRight: false,
+  rotateLeft: false,
+};
+gameGlobalValues.pointerLocker.requestPointerLock = pointerLockApi
+                                                    ? gameGlobalValues.pointerLocker[pointerLockApi.request]
+                                                    : null;
+document.exitPointerLock = document[pointerLockApi.exit];
+
+
+
 
 //set-up menu
 document.addEventListener('DOMContentLoaded', () => {
+  if (!pointerLockApi) {
+      const infoBox =  document.querySelector('#menu-container');
+      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+      return;
+  }
   //esc to menu TODO: place with other key events and make more readable
   document.addEventListener('keyup', (e) => {
     const menu = document.querySelector('#menu-container');
-    const currentDisplay = menu.style.display
-    e.keyCode === 27
-      ? menu.style.display =  currentDisplay === 'none'
-                                ? ''
-                                : 'none'
+    (e.keyCode === 27 || e.keyCode === 80) && menu.style.display === 'none'
+      ? (document.exitPointerLock(), menu.style.display = '')
       : null
   });
+
   //sliders for cellular automata dimensions update displayed values
   const setSliderMenuGlobals = (id, val) => {
     const k = ({length: 'x', width: 'y', height: 'z'})[id];
@@ -74,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return Array.from(document.querySelectorAll(`${className} .rule-selected`))
                 .map(node => parseInt(node.innerHTML));
   };
+
   //deathWhen looks at live-cells's children
   document.querySelectorAll('BUTTON').forEach( button => {
     switch (button.name) {
@@ -99,4 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
   });
+
+  //play-button
+  document.querySelector('.start-game > button')
+          .addEventListener('click', () => {
+            document.querySelector('#menu-container').style.display = 'none';
+            gameGlobalValues.pointerLocker.requestPointerLock();
+          });
+
 });
