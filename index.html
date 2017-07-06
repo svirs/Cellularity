@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>3D Cellular Automata</title>
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/style.css">
+	</head>
+	<body>
+
+  	<script src="js/builds/three.min.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="js/game.js"></script>
+
+    <div id="menu-container">
+      <div id='menu-screen'>
+        <div class="game-options">
+          <div class="voxel-cube">
+            <div id='length'>
+              <span class='display'>50</span>
+              <input type="range" min="1" max="100" value="50">
+            </div>
+            <div id='width'>
+              <span class='display'>50</span>
+              <input type="range" min="1" max="100" value="50">
+            </div>
+            <div id='height'>
+              <span class='display'>50</span>
+              <input type="range" min="1" max="100" value="50">
+            </div>
+          </div>
+          <div class="cell-rules">
+            <div class="dead-cells">
+              <div class='info'>Select # of adjacents that birthes a cell, others stay dead.</div>
+              <div class='number-store'>
+                <div class="row1"></div>
+                <div class="row2"></div>
+                <div class="row3"></div>
+              </div>
+            </div>
+            <div class="live-cells">
+              <div class='info'>Select # of adjacents that kills a cell, others survive.</div>
+              <div class='number-store'>
+                <div class="row1"></div>
+                <div class="row2"></div>
+                <div class="row3"></div>
+              </div>
+            </div>
+          </div>
+          <div class="apply">
+            <button type="button" name="reset-birth">Reset Birth Rules</button>
+            <button type="button" name="reset-kill">Reset Kill Rules</button>
+            <button type="button" name="apply">Apply Changes</button>
+          </div>
+        </div>
+        <div class="game-rules">
+          <div class="info">
+            BLAH BLAH BLAH
+            ESC TO OPEN/CLOSE
+          </div>
+          <div class="start-game">
+            <button type="button" name="start">Play!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
