@@ -5,8 +5,11 @@ class CAGame {
 
 		this.colors = {
 			deadCell: new THREE.Color(0xff0000),
+			deadCellAlpha: 0.1,
 			liveCell: new THREE.Color(0x00ff00),
-			selectedCell: new THREE.Color(0x0000ff)
+			liveCellAlpha: 1,
+			selectedCell: new THREE.Color(0x0000ff),
+			selectedCellAlpha: 0.5,
 		};
 
 		this.cellStore =  new CellularAutomataStore(length, width, height);
@@ -40,7 +43,8 @@ class CAGame {
 		// this.raycaster = new THREE.Raycaster(
 		// 	new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 3, 10 );
 		// this.raycaster.linePrecision = 3;
-
+		this.prevCell = null;
+		this.currentCell = null;
 
 		this.particles = null;
 	}
@@ -58,43 +62,33 @@ class CAGame {
 		return {cam, pitch, yaw};
 	}
 
-	// makeVoxel(state){
-	// 	// state 1 or 0
-	// 	const color = state ? this.liveCellColor : this.deadCellColor;
-	// 	const box = new THREE.BoxGeometry( 1, 1, 1 );
-	// 	const wires = new THREE.WireframeGeometry( box );
-	// 	const material = new THREE.LineBasicMaterial( { color: color, linewidth: 2 } );
-	//
-	// 	const voxel = new THREE.LineSegments(wires, material);
-	// 	voxel.material.depthTest = false;
-	// 	voxel.material.transparent = true;
-	// 	return voxel;
-	// }
+
+	flipParticle(index){
+		const prevState = this.particles.geometry.attributes.state.array[index];
+		const offset = this.particles.geometry.attributes.offset.array[index];
+		this.cellStore._flipCellState(offset);
+		this.particles.geometry.attributes.state.array[index] = prevState ? 0 : 1;
+		this.particles.geometry.attributes.state.needsUpdate = true;
+	}
 
 
-	// flipVoxel(name){
-	// 	this.cellStore._flipCellState(parseInt(name));
-	// 	const voxel = this.scene.getObjectByName(name);
-	// 	voxel.state = voxel.state ? 0 : 1;  //swap
-	// 	voxel.material.color = voxel.state
-	// 		? this.liveCellColor
-	// 		: this.deadCellColor
-	// }
+	colorParticleSelected(particleSystem, index, color, alpha){
+		const indexFactor = particleSystem.geometry.attributes.customColor.itemSize;
+		const colorArr = particleSystem.geometry.attributes.customColor.array;
+		colorArr[index * indexFactor] = color.r;
+		colorArr[index * indexFactor + 1] = color.g;
+		colorArr[index * indexFactor + 2] = color.b;
+		particleSystem.geometry.attributes.customColor.needsUpdate = true;
 
-	// resetPreviousSelectedCell(name){
-	// 	if (name){
-	// 		const prevSelected = this.scene.getObjectByName(name);
-	// 		prevSelected.material.color = prevSelected.state
-	// 			? this.liveCellColor
-	// 			: this.deadCellColor
-	// 	}
-	// }
+		particleSystem.geometry.attributes.customAlpha.array[index] = alpha;
+		particleSystem.geometry.attributes.customAlpha.needsUpdate = true;
 
+	}
 
 	nextIteration(){
 		//TODO trigger rule resolution!
 		for (let bit of this.cellStore.toCellArray()){
-			this.scene.getObjectByName(bit.offset).state = bit.state;
+			// this.scene.getObjectByName(bit.offset).state = bit.state;
 		}
 	}
 
@@ -110,8 +104,8 @@ class CAGame {
 
 		const particleSystem = new THREE.BufferGeometry();
 		particleSystem.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-		particleSystem.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-		particleSystem.addAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
+		particleSystem.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+		particleSystem.addAttribute('customAlpha', new THREE.BufferAttribute(alpha, 1));
 		particleSystem.addAttribute('offset', new THREE.BufferAttribute(offset, 1));
 		particleSystem.addAttribute('state', new THREE.BufferAttribute(state, 1));
 		//data zero'd out
@@ -135,7 +129,7 @@ class CAGame {
 			colors[3 * index + 1] = colorFromState.g;
 			colors[3 * index + 2] = colorFromState.b;
 
-			alpha[index] = bit.state ? 1 : .5;
+			alpha[index] = bit.state ? this.colors.liveCellAlpha : this.colors.deadCellAlpha;
 
 			offset[index] = bit.offset;
 
@@ -143,18 +137,24 @@ class CAGame {
 
 		});
 
-		const particleMaterial = new THREE.PointsMaterial({vertexColors: THREE.VertexColors});
+
+		const particleMaterial = new THREE.ShaderMaterial({
+				// vertexColors: THREE.VertexColors,
+				vertexShader: document.getElementById('vertexshader').textContent,
+        fragmentShader: document.getElementById('fragmentshader').textContent,
+				transparent: true,
+			});
 		// const particleShaderMaterial = new THREE.ShaderMaterial();
 
 		this.particles = new THREE.Points(particleSystem, particleMaterial);
+		this.particles.name = 'particles';
 		this.scene.add(this.particles);
 
 		this.scene.background = new THREE.Color( 0xf0f0f0 )
 
-
 		this.camera.yaw.translateZ(10);
 		this.camera.yaw.translateX(-10);
-
+		this.camera.yaw.rotation.y -= 5;
 		this.animate();
 	}
 
@@ -165,44 +165,23 @@ class CAGame {
 		requestAnimationFrame( this.animate.bind(this) );
 
 
-		// if (this.controls.canMove){
 		if (this.controls.movingForward){
 			this.camera.yaw.translateZ(-this.speed);
 		} else if (this.controls.movingBackward){
 			this.camera.yaw.translateZ(this.speed);
 		}
-		// if (this.controls.movingForward){
-		// 	this.camera.cam.position.z -= this.speed;
-		// } else if (this.controls.movingBackward){
-		// 	this.camera.cam.position.z += this.speed;
-		// }
-
 
 		if (this.controls.strafeRight){
 			this.camera.yaw.translateX(this.speed);
 		} else if (this.controls.strafeLeft){
 			this.camera.yaw.translateX(-this.speed);
 		}
-		// if (this.controls.strafeRight){
-		// 	this.camera.cam.position.x += this.speed;
-		// } else if (this.controls.strafeLeft){
-		// 	this.camera.cam.position.x -= this.speed;
-		// }
-
-
 
 		if (this.controls.moveUp){
 			this.camera.yaw.translateY(this.speed);
 		} else if (this.controls.moveDown){
 			this.camera.yaw.translateY(-this.speed);
 		}
-		// if (this.controls.moveUp){
-		// 	this.camera.cam.position.y += this.speed;
-		// } else if (this.controls.moveDown){
-		// 	this.camera.cam.position.y -= this.speed;
-		// }
-
-
 
 		this.controls.signalStep
 			? this.nextIteration()
@@ -211,36 +190,60 @@ class CAGame {
 		if (this.controls.mouseMoved){
 			this.camera.yaw.rotation.y -= this.mouseSensitivityFactor * this.controls.horizontalPan * this.degToRad;
 			this.camera.pitch.rotation.x -= this.mouseSensitivityFactor * this.controls.verticalPan * this.degToRad;
-			// this.camera.cam.rotation.y -= this.mouseSensitivityFactor * this.controls.horizontalPan * this.degToRad;
-			// this.camera.cam.rotation.x -= this.mouseSensitivityFactor * this.controls.verticalPan * this.degToRad;
-			// this.camera.pitch.rotation.x = Math.max( - this.pi2, Math.min( this.pi2, this.camera.pitch.rotation.x ) );
+
 		}
 
 
 		this.raycaster.setFromCamera( this.centerOfScreen, this.camera.cam );
-		// const intersected = this.raycaster.intersectObject( this.particles );
-		// if (intersected.length > 0) {
-		// 	const particleIndex = intersected[0].index;
-		// 	const selected = intersected[0].object.geometry.vertices[particleIndex];
-		// 	if (this.selectedCell !== selected.name){
-		// 		this.resetPreviousSelectedCell(this.selectedCell);
-		// 		this.selectedCell = selected.vertices.name;
-		// 		selected.geometry.color = this.selectedCellColor;
-		// 	}
-		// } else {
-		// 	this.resetPreviousSelectedCell(this.selectedCell)
-		// 	this.selectedCell = null;
-		// }
-		//
-		// if (this.controls.isClicking && this.selectedCell && this.selectedCell !== this.prevSelectedCell){
-		// 	this.prevSelectedCell = this.selectedCell;
-		// 	this.flipVoxel(this.selectedCell);
-		// } else if (!this.controls.isClicking) {
-		// 	this.prevSelectedCell = null;
-		// }
+		const intersected = this.raycaster.intersectObject( this.particles );
+		//update to selected color
+		if (intersected.length > 0) {
+			const particleIndex = intersected[0].index;
+			const selected = intersected[0].object;
+			const state = selected.geometry.attributes.state.array[particleIndex];
+			const offset = selected.geometry.attributes.offset.array[particleIndex];
+			this.currentCell = particleIndex;
+			this.colorParticleSelected(selected, particleIndex, this.colors.selectedCell, this.colors.selectedCellAlpha);
 
+			if (this.prevCell && (this.prevCell !== this.currentCell)){
+				this.colorParticleSelected(this.particles, this.prevCell, ...this.getCellColors(this.prevCell));
+				this.prevCell = null;
+			}
+
+		} else {
+			this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell));
+			this.currentCell = null;
+			this.prevCell = null;
+
+		}
+
+		if (this.controls.isClicking) {
+			// debugger
+		}
+		if (this.controls.isClicking && this.currentCell && this.currentCell !== this.prevCell){
+			this.flipParticle(this.currentCell);
+			this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell, true));
+		} else if (!this.controls.isClicking) {
+			this.prevCell = null;
+		}
+
+		this.prevCell = this.currentCell;
 
 	  this.renderer.render(this.scene, this.camera.cam);
 	}
 
+	getCellColors(index, opposite = false){
+		const cellState = this.particles.geometry.attributes.state.array[index];
+		if (!opposite){
+			const [color, alpha] = cellState
+				? [this.colors.liveCell, this.colors.liveCellAlpha]
+			 	: [this.colors.deadCell, this.colors.deadCellAlpha];
+			return [color, alpha];
+		} else{
+			const [color, alpha] = cellState
+			? [this.colors.deadCell, this.colors.deadCellAlpha]
+			: [this.colors.liveCell, this.colors.liveCellAlpha];
+			return [color, alpha];
+		}
+	}
 }

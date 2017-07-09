@@ -10,6 +10,27 @@
 
   	<script src="js/builds/three.min.js"></script>
   	<!-- <script src="js/builds/stats.min.js"></script> -->
+		<script type="x-shader/x-vertex" id="vertexshader">
+		    attribute float customAlpha;
+		    varying float vAlpha;
+
+				attribute vec3 customColor;
+				varying vec3 vColor;
+		    void main() {
+		        vAlpha = customAlpha;
+		        vColor = customColor;
+		        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+		        gl_PointSize = 25.0;
+		        gl_Position = projectionMatrix * mvPosition;
+		    }
+		</script>
+		<script type="x-shader/x-fragment" id="fragmentshader">
+		    varying vec3 vColor;
+		    varying float vAlpha;
+		    void main() {
+		        gl_FragColor = vec4( vColor, vAlpha );
+		    }
+		</script>
 
 		<script type="text/javascript" src="js/controls.js"></script>
 		<script type="text/javascript" src="js/cellular_automata.js"></script>

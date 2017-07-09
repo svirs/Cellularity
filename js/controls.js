@@ -39,7 +39,6 @@ class Movement {
       document.addEventListener(pointerLockApi.change, () => {
         if(document.pointerLockElement === gameGlobalValues.pointerLocker){
           // this.canMove = true;
-
           document.addEventListener('mousemove', onMouseMove);
           document.addEventListener('mousedown', onMouseDown);
           document.addEventListener('mouseup', onMouseUp);
