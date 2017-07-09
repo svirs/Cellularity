@@ -14,13 +14,16 @@
 		    attribute float customAlpha;
 		    varying float vAlpha;
 
+				uniform vec4 origin;
+
 				attribute vec3 customColor;
 				varying vec3 vColor;
 		    void main() {
 		        vAlpha = customAlpha;
 		        vColor = customColor;
 		        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-		        gl_PointSize = 25.0;
+						float cameraDist = distance(mvPosition, origin);
+		        gl_PointSize = 300.0 / cameraDist;
 		        gl_Position = projectionMatrix * mvPosition;
 		    }
 		</script>

@@ -40,21 +40,17 @@ class CAGame {
 		this.speed = .35;
 
 		this.raycaster = new THREE.Raycaster();
-		// this.raycaster = new THREE.Raycaster(
-		// 	new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 3, 10 );
-		// this.raycaster.linePrecision = 3;
-		this.prevCell = null;
-		this.currentCell = null;
+		this.raycaster.params.Points.threshold = 0.15;
 
+		// this.prevCell = null;
+		// this.currentCell = null;
+
+		this.lastCell = null;
 		this.particles = null;
 	}
 
-	updateDimensions(newX, newY, newZ){
-		//new slider values
-	}
-
 	initCamera(near, far){
-		const cam = new THREE.PerspectiveCamera( 75, (window.innerWidth / window.innerHeight), near, far );
+		const cam = new THREE.PerspectiveCamera( 90, (window.innerWidth / window.innerHeight), near, far );
 		const pitch = new THREE.Object3D(); //vertical rotation of the camera view
 		const yaw = new THREE.Object3D(); //horizontal rotation of the camera view
 		pitch.add(cam);
@@ -73,6 +69,7 @@ class CAGame {
 
 
 	colorParticleSelected(particleSystem, index, color, alpha){
+		if (index == null) {debugger}
 		const indexFactor = particleSystem.geometry.attributes.customColor.itemSize;
 		const colorArr = particleSystem.geometry.attributes.customColor.array;
 		colorArr[index * indexFactor] = color.r;
@@ -193,41 +190,49 @@ class CAGame {
 
 		}
 
-
 		this.raycaster.setFromCamera( this.centerOfScreen, this.camera.cam );
 		const intersected = this.raycaster.intersectObject( this.particles );
 		//update to selected color
 		if (intersected.length > 0) {
-			const particleIndex = intersected[0].index;
-			const selected = intersected[0].object;
-			const state = selected.geometry.attributes.state.array[particleIndex];
-			const offset = selected.geometry.attributes.offset.array[particleIndex];
-			this.currentCell = particleIndex;
-			this.colorParticleSelected(selected, particleIndex, this.colors.selectedCell, this.colors.selectedCellAlpha);
+			//get currentCell, color it selected color
 
-			if (this.prevCell && (this.prevCell !== this.currentCell)){
-				this.colorParticleSelected(this.particles, this.prevCell, ...this.getCellColors(this.prevCell));
-				this.prevCell = null;
+			const currentCell = intersected[0].index;
+			if (!(currentCell === this.lastCell)){
+				//on new cell
+				//selected new cell
+				const selected = intersected[0].object;
+				this.colorParticleSelected(this.particles, currentCell, this.colors.selectedCell, this.colors.selectedCellAlpha);
+
+				if (this.lastCell != null){
+					//deselect old cell
+					this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.prevCell));
+				}
+
+			} else {
+				//on same cell as last render
+				if (this.controls.justClicked){
+					this.controls.justClicked = false; //burn click
+					this.flipParticle(currentCell);
+				}
 			}
-
 		} else {
-			this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell));
-			this.currentCell = null;
-			this.prevCell = null;
-
+			//not selecting anything
+			//clear last cell
+			if (this.lastCell != null){
+				//deselect old cell
+				this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.lastCell));
+			}
 		}
-
-		if (this.controls.isClicking) {
-			// debugger
-		}
-		if (this.controls.isClicking && this.currentCell && this.currentCell !== this.prevCell){
-			this.flipParticle(this.currentCell);
-			this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell, true));
-		} else if (!this.controls.isClicking) {
-			this.prevCell = null;
-		}
-
-		this.prevCell = this.currentCell;
+		//set to old cell
+		// this.lastCell = currentCell;
+		//
+		// if (this.controls.isClicking && this.currentCell != null && this.currentCell !== this.prevCell){
+		// 	this.flipParticle(this.currentCell);
+		// 	this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell, true));
+		// } else if (!this.controls.isClicking) {
+		// 	// this.prevCell = null;
+		// }
+		// this.prevCell = this.currentCell;
 
 	  this.renderer.render(this.scene, this.camera.cam);
 	}
@@ -241,8 +246,8 @@ class CAGame {
 			return [color, alpha];
 		} else{
 			const [color, alpha] = cellState
-			? [this.colors.deadCell, this.colors.deadCellAlpha]
-			: [this.colors.liveCell, this.colors.liveCellAlpha];
+				? [this.colors.deadCell, this.colors.deadCellAlpha]
+				: [this.colors.liveCell, this.colors.liveCellAlpha];
 			return [color, alpha];
 		}
 	}

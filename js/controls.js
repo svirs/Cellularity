@@ -15,6 +15,7 @@ class Movement {
     this.mouseMoved = false;
     this.timeOut = null;
     this.isClicking = false;
+    this.justClicked = false;
     this.signalStep = false;
     this.addEvents();
 }
@@ -31,9 +32,14 @@ class Movement {
         this.timeOut = setTimeout( ( _ => this.mouseMoved = false).bind(this), 16)
       } ).bind(this);
 
-      const onMouseDown = ( e => this.isClicking = true).bind(this);
+      const onMouseDown = ( e => {
+        this.isClicking = true
+      }).bind(this);
 
-      const onMouseUp = ( e => this.isClicking = false).bind(this);
+      const onMouseUp = ( e => {
+        this.isClicking = false
+        this.justClicked = true;
+      }).bind(this);
 
 
       document.addEventListener(pointerLockApi.change, () => {
