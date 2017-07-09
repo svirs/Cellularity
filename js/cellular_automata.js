@@ -70,6 +70,7 @@ class CellularAutomataStore{
 
   _flipCellState(offset){
     // const prevState = this.getCellState(offset);
+    console.log('flipped')
     this._isCellAlive(offset)
       ? this._killCell(offset)
       : this._birthCell(offset);

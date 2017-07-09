@@ -67,7 +67,7 @@ class CAGame {
 	}
 
 
-	flipCell(name){
+	flipVoxel(name){
 		this.cellStore._flipCellState(parseInt(name));
 		const voxel = this.scene.getObjectByName(name);
 		voxel.state = voxel.state ? 0 : 1;  //swap
@@ -182,7 +182,7 @@ class CAGame {
 
 		if (this.controls.isClicking && this.selectedCell && this.selectedCell !== this.prevSelectedCell){
 			this.prevSelectedCell = this.selectedCell;
-			this.flipCell(this.selectedCell);
+			this.flipVoxel(this.selectedCell);
 		} else if (!this.controls.isClicking) {
 			this.prevSelectedCell = null;
 		}
