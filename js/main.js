@@ -12,11 +12,11 @@ const menuGlobalValues = {
 };
 //pointerLockApi is global
 const pointerLockApi = ( () => {
-  const _pointerLockKeys = ['doc', 'change', 'request', 'exit', 'error'];
+  const _pointerLockKeys = ['doc', 'change', 'request', 'exit', 'error', 'movementX',  'movementY'];
   const _pointerLockValues = [
-    ['pointerLockElement', 'pointerlockchange', 'requestPointerLock', 'exitPointerLock', 'pointerlockerror'],
-    ['webkitPointerLockElement', 'webkitpointerlockchange', 'webkitRequestPointerLock', 'webkitExitPointerLock', 'webkitpointerlockerror'],
-    ['mozPointerLockElement', 'mozpointerlockchange', 'mozRequestPointerLock', 'mozExitPointerLock', 'mozpointerlockerror']
+    ['pointerLockElement', 'pointerlockchange', 'requestPointerLock', 'exitPointerLock', 'pointerlockerror', 'movementX',  'movementY'],
+    ['webkitPointerLockElement', 'webkitpointerlockchange', 'webkitRequestPointerLock', 'webkitExitPointerLock', 'webkitpointerlockerror', 'webkitMovementX',  'webkitMovementY'],
+    ['mozPointerLockElement', 'mozpointerlockchange', 'mozRequestPointerLock', 'mozExitPointerLock', 'mozpointerlockerror', 'mozMovementX',  'mozMovementY']
   ].filter( arr => arr[0] in document ).shift();
   if (_pointerLockValues){
     return Object.assign({}, ..._pointerLockKeys.map((key, i) => ( {[key]: _pointerLockValues[i]})));
@@ -28,10 +28,8 @@ const pointerLockApi = ( () => {
 const gameGlobalValues = {
   canMove: false,
   pointerLocker: document.body,
-  movingForward: false,
-  movingBackward: false,
-  rotateRight: false,
-  rotateLeft: false,
+
+
 };
 gameGlobalValues.pointerLocker.requestPointerLock = pointerLockApi
                                                     ? gameGlobalValues.pointerLocker[pointerLockApi.request]
@@ -48,13 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
       infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
       return;
   }
-  //esc to menu TODO: place with other key events and make more readable
-  document.addEventListener('keyup', (e) => {
-    const menu = document.querySelector('#menu-container');
-    (e.keyCode === 27 || e.keyCode === 80) && menu.style.display === 'none'
-      ? (document.exitPointerLock(), menu.style.display = '')
-      : null
-  });
 
   //sliders for cellular automata dimensions update displayed values
   const setSliderMenuGlobals = (id, val) => {
@@ -141,4 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
             gameGlobalValues.pointerLocker.requestPointerLock();
           });
 
+  document.game = new CAGame(
+    // menuGlobalValues.dimensions.x,
+    // menuGlobalValues.dimensions.y,
+    // menuGlobalValues.dimensions.z,
+    10, 10, 10,
+    menuGlobalValues.rules
+  );
+  document.game.init();
 });
