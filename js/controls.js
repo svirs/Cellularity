@@ -15,6 +15,7 @@ class Movement {
     this.mouseMoved = false;
     this.timeOut = null;
     this.isClicking = false;
+    this.signalStep = false;
     this.addEvents();
 }
 
@@ -92,7 +93,10 @@ class Movement {
             menu.style.display === 'none'
               ? (document.exitPointerLock(), menu.style.display = '')
               :null;
-          return;
+              return;
+          case 'f':
+          case 'F':
+            this.signalStep = false;
           default:
             break;
         }
@@ -117,6 +121,9 @@ false
             return;
           case ' ':
             this.moveUp = true;
+            return;
+          case 'f':
+            this.signalStep = true;
             return;
           default:
             return;

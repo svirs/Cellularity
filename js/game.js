@@ -37,7 +37,7 @@ class CAGame {
 		this.raycaster.linePrecision = 3;
 
 		this.selectedCell = null;
-		this.justFlipped = [];
+		this.prevSelectedCell = null;
 	}
 
 	updateDimensions(newX, newY, newZ){
@@ -66,37 +66,38 @@ class CAGame {
 		return voxel;
 	}
 
-	swapName(name){
-		const [offset, state] = name.split('_');
-		return offset + '_' + (parseInt(state) ? 0 : 1)
-	}
 
 	flipCell(name){
-		const [offset, state] = name.split('_');
+		this.cellStore._flipCellState(parseInt(name));
 		const voxel = this.scene.getObjectByName(name);
-		const newName = this.swapName(name);
-		voxel.name = newName;  //swap
-		// this.resetPreviousSelectedCell(newName);
-		voxel.material.color = parseInt(state)
+		voxel.state = voxel.state ? 0 : 1;  //swap
+		voxel.material.color = voxel.state
 			? this.liveCellColor
 			: this.deadCellColor
 	}
 
 	resetPreviousSelectedCell(name){
 		if (name){
-			const prevSelected = this.scene.getObjectByName(name) ||
-														this.scene.getObjectByName(this.swapName(name));
-
-			prevSelected.material.color = parseInt(prevSelected.name.slice(-1))
+			const prevSelected = this.scene.getObjectByName(name);
+			prevSelected.material.color = prevSelected.state
 				? this.liveCellColor
 				: this.deadCellColor
 		}
 	}
 
+
+	nextIteration(){
+		//TODO trigger rule resolution!
+		for (let bit of this.cellStore.toCellArray()){
+			this.scene.getObjectByName(bit.offset).state = bit.state;
+		}
+	}
+
 	init(){
-		this.cellStore.toCellArray().forEach( (bit) => {
+		this.cellStore.toCellArray().forEach(bit => {
 			const voxel = this.makeVoxel(bit.state);
-			voxel.name = bit.offset + '_' + bit.state;
+			voxel.name = bit.offset;
+			voxel.state = bit.state;
 			this.scene.add( voxel );
 			voxel.position.set(...this.cellStore._offsetToIndex(bit.offset));
 		});
@@ -164,6 +165,7 @@ class CAGame {
 			// this.camera.pitch.rotation.x = Math.max( - this.pi2, Math.min( this.pi2, this.camera.pitch.rotation.x ) );
 		}
 
+
 		this.raycaster.setFromCamera( this.centerOfScreen, this.camera.cam );
 		const intersects = this.raycaster.intersectObjects( this.scene.children );
 		if (intersects.length > 0) {
@@ -178,14 +180,18 @@ class CAGame {
 			this.selectedCell = null;
 		}
 
-		if (this.controls.isClicking && this.selectedCell){
-			const prefix = this.selectedCell.slice(0, -2);
-			this.justFlipped.includes(prefix)
-				? null
-				: (this.justFlipped.push(prefix), this.flipCell(this.selectedCell));
+		if (this.controls.isClicking && this.selectedCell && this.selectedCell !== this.prevSelectedCell){
+			this.prevSelectedCell = this.selectedCell;
+			this.flipCell(this.selectedCell);
 		} else if (!this.controls.isClicking) {
-			this.justFlipped = [];
+			this.prevSelectedCell = null;
 		}
+
+
+
+		this.controls.signalStep
+			? this.nextIteration()
+			: null;
 
 	  this.renderer.render(this.scene, this.camera.cam);
 	}
