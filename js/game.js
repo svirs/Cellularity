@@ -40,7 +40,7 @@ class CAGame {
 		this.speed = .35;
 
 		this.raycaster = new THREE.Raycaster();
-		this.raycaster.params.Points.threshold = 0.15;
+		this.raycaster.params.Points.threshold = 0.5;
 
 		// this.prevCell = null;
 		// this.currentCell = null;
@@ -69,7 +69,6 @@ class CAGame {
 
 
 	colorParticleSelected(particleSystem, index, color, alpha){
-		if (index == null) {debugger}
 		const indexFactor = particleSystem.geometry.attributes.customColor.itemSize;
 		const colorArr = particleSystem.geometry.attributes.customColor.array;
 		colorArr[index * indexFactor] = color.r;
@@ -82,12 +81,6 @@ class CAGame {
 
 	}
 
-	nextIteration(){
-		//TODO trigger rule resolution!
-		for (let bit of this.cellStore.toCellArray()){
-			// this.scene.getObjectByName(bit.offset).state = bit.state;
-		}
-	}
 
 	init(){
 		const allCells = this.cellStore.toCellArray();
@@ -105,14 +98,7 @@ class CAGame {
 		particleSystem.addAttribute('customAlpha', new THREE.BufferAttribute(alpha, 1));
 		particleSystem.addAttribute('offset', new THREE.BufferAttribute(offset, 1));
 		particleSystem.addAttribute('state', new THREE.BufferAttribute(state, 1));
-		//data zero'd out
-		// this.cellStore.toCellArray().forEach(bit => {
-		// 	const voxel = this.makeVoxel(bit.state);
-		// 	voxel.name = bit.offset;
-		// 	voxel.state = bit.state;
-		// 	this.scene.add( voxel );
-		// 	voxel.position.set(...this.cellStore._offsetToIndex(bit.offset));
-		// });
+
 
 		allCells.forEach((bit, index)=> {
 			//bit.state, bit.offset
@@ -155,6 +141,24 @@ class CAGame {
 		this.animate();
 	}
 
+	updateCells(){
+		const color = this.particles.geometry.attributes.customColor
+		const alpha = this.particles.geometry.attributes.customAlpha
+		const state = this.particles.geometry.attributes.state
+		this.cellStore.nextIteration(this.rules);
+		this.cellStore.toCellArray().forEach( (bit, index) => {
+			const colorFromState = bit.state ? this.colors.liveCell : this.colors.deadCell;
+			color.array[3 * index] = colorFromState.r;
+			color.array[3 * index + 1] = colorFromState.g;
+			color.array[3 * index + 2] = colorFromState.b;
+			color.needsUpdate = true;
+			alpha[index] = bit.state ? this.colors.liveCellAlpha : this.colors.deadCellAlpha;
+			alpha.needsUpdate = true;
+			state[index] = bit.state;
+			state.needsUpdate = true;
+		});
+	}
+
 
 
 
@@ -181,7 +185,7 @@ class CAGame {
 		}
 
 		this.controls.signalStep
-			? this.nextIteration()
+			? (this.updateCells(), this.controls.signalStep = false) //consume signal
 			: null;
 
 		if (this.controls.mouseMoved){
@@ -200,21 +204,22 @@ class CAGame {
 			if (!(currentCell === this.lastCell)){
 				//on new cell
 				//selected new cell
-				const selected = intersected[0].object;
 				this.colorParticleSelected(this.particles, currentCell, this.colors.selectedCell, this.colors.selectedCellAlpha);
-
 				if (this.lastCell != null){
 					//deselect old cell
-					this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.prevCell));
+					this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.lastCell));
 				}
 
 			} else {
 				//on same cell as last render
 				if (this.controls.justClicked){
+					//TODO laggy clicks
 					this.controls.justClicked = false; //burn click
 					this.flipParticle(currentCell);
+					this.colorParticleSelected(this.particles, currentCell, ...this.getCellColors(currentCell));
 				}
 			}
+			this.lastCell = currentCell;
 		} else {
 			//not selecting anything
 			//clear last cell
@@ -223,16 +228,6 @@ class CAGame {
 				this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.lastCell));
 			}
 		}
-		//set to old cell
-		// this.lastCell = currentCell;
-		//
-		// if (this.controls.isClicking && this.currentCell != null && this.currentCell !== this.prevCell){
-		// 	this.flipParticle(this.currentCell);
-		// 	this.colorParticleSelected(this.particles, this.currentCell, ...this.getCellColors(this.currentCell, true));
-		// } else if (!this.controls.isClicking) {
-		// 	// this.prevCell = null;
-		// }
-		// this.prevCell = this.currentCell;
 
 	  this.renderer.render(this.scene, this.camera.cam);
 	}

@@ -101,7 +101,8 @@ class Movement {
               return;
           case 'f':
           case 'F':
-            this.signalStep = false;
+            this.signalStep = true;
+            //on up only
           default:
             break;
         }
@@ -128,7 +129,7 @@ false
             this.moveUp = true;
             return;
           case 'f':
-            this.signalStep = true;
+            // this.signalStep = true;
             return;
           default:
             return;

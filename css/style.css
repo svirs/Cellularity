@@ -2,6 +2,21 @@ body * {
   border: 1px solid red;
 }
 
+#crosshairs {
+  z-index: 500;
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  background-color: purple;
+  opacity: .3;
+}
+
 #menu-container {
   width: 100vw;
   height: 100vh;

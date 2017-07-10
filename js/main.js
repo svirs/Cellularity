@@ -116,8 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           document.querySelectorAll('.voxel-cube > div input')
                   .forEach( slider => {
+
                     setSliderMenuGlobals(slider.parentNode.id, slider.value);
                   });
+
+          const deaths = document.querySelectorAll('.live-cells .number-store .number-neighbor.rule-selected');
+          const births = document.querySelectorAll('.dead-cells .number-store .number-neighbor.rule-selected');
+
+          document.game.rules.deathWhen = Array.from(deaths).map(tag => parseInt(tag.innerHTML));
+          document.game.rules.birthWhen = Array.from(births).map(tag => parseInt(tag.innerHTML));
         });
         return;
       default:
@@ -136,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // menuGlobalValues.dimensions.x,
     // menuGlobalValues.dimensions.y,
     // menuGlobalValues.dimensions.z,
-    30, 30, 30,
+    50, 50, 50,
     menuGlobalValues.rules
   );
   document.game.init();
