@@ -142,7 +142,6 @@ false
             this.moveUp = true;
             return;
           case 'f':
-            // this.signalStep = true;
             return;
           case 'g':
             return;

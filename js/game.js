@@ -209,12 +209,12 @@ class CAGame {
 			: null;
 
 		if(this.controls.signalPlay && !this.intervalId){
-			console.log('hit g;')
+			this.controls.signalPlay = false;
+			debugger
 			this.intervalId = setInterval( () => {
 				this.updateCells();
-				console.log('playing');
 			}, 500);
-		} else if (this.controls.signalPlay && this.intervalId){
+		} else if (this.controls.signalPlay && this.intervalId !== null){
 			//FIX THIs
 			this.controls.signalPlay = false;
 			clearInterval(this.intervalId);
