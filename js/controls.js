@@ -17,6 +17,8 @@ class Movement {
     this.isClicking = false;
     this.justClicked = false;
     this.signalStep = false;
+    this.signalPlay = false;
+    this.signalHideDead = false;
     this.addEvents();
 }
 
@@ -103,6 +105,17 @@ class Movement {
           case 'F':
             this.signalStep = true;
             //on up only
+            break;
+          case 'g':
+          case 'G':
+            this.signalPlay = true;
+            //on up only
+            break;
+          case 'h':
+          case 'H':
+            this.signalHideDead = true;
+            //on up only
+            break;
           default:
             break;
         }
@@ -130,6 +143,10 @@ false
             return;
           case 'f':
             // this.signalStep = true;
+            return;
+          case 'g':
+            return;
+          case 'h':
             return;
           default:
             return;

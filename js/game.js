@@ -6,6 +6,7 @@ class CAGame {
 		this.colors = {
 			deadCell: new THREE.Color(0xff0000),
 			deadCellAlpha: 0.1,
+			deadCellAlphaHide: 0,
 			liveCell: new THREE.Color(0x00ff00),
 			liveCellAlpha: 1,
 			selectedCell: new THREE.Color(0x0000ff),
@@ -47,7 +48,11 @@ class CAGame {
 
 		this.lastCell = null;
 		this.particles = null;
+
+		this.intervalId = null;
 	}
+
+
 
 	initCamera(near, far){
 		const cam = new THREE.PerspectiveCamera( 90, (window.innerWidth / window.innerHeight), near, far );
@@ -60,9 +65,11 @@ class CAGame {
 
 
 	flipParticle(index){
+		//jul10 cellstore x, y, z here z, y, x
 		const prevState = this.particles.geometry.attributes.state.array[index];
 		const offset = this.particles.geometry.attributes.offset.array[index];
-		this.cellStore._flipCellState(offset);
+		console.log('from game.js', offset,...this.particles.geometry.attributes.position.array.slice(index*3, 3*index + 3), '---', ...this.cellStore._offsetToIndex(offset))
+		this.cellStore.flipCellStateWithOffset(offset);
 		this.particles.geometry.attributes.state.array[index] = prevState ? 0 : 1;
 		this.particles.geometry.attributes.state.needsUpdate = true;
 	}
@@ -106,7 +113,6 @@ class CAGame {
 			positions[3 * index] = x;
 			positions[3 * index + 1] = y;
 			positions[3 * index + 2] = z;
-
 			const colorFromState = bit.state ? this.colors.liveCell : this.colors.deadCell;
 			colors[3 * index] = colorFromState.r;
 			colors[3 * index + 1] = colorFromState.g;
@@ -135,10 +141,21 @@ class CAGame {
 
 		this.scene.background = new THREE.Color( 0xf0f0f0 )
 
-		this.camera.yaw.translateZ(10);
-		this.camera.yaw.translateX(-10);
-		this.camera.yaw.rotation.y -= 5;
+		// this.camera.yaw.translateZ(10);
+		// this.camera.yaw.translateX(-10);
+		// this.camera.yaw.rotation.y -= 5;
 		this.animate();
+	}
+
+	hideDeadCells(){
+		[this.colors.deadCellAlpha, this.colors.deadCellAlphaHide] = [this.colors.deadCellAlphaHide, this.colors.deadCellAlpha]
+		const alpha = this.particles.geometry.attributes.customAlpha.array;
+		this.particles.geometry.attributes.state.array.forEach((bit, index) =>{
+			if (bit === 0){
+				alpha[index] = this.colors.deadCellAlpha;
+			}
+		});
+		this.particles.geometry.attributes.customAlpha.needsUpdate = true;
 	}
 
 	updateCells(){
@@ -147,14 +164,14 @@ class CAGame {
 		const state = this.particles.geometry.attributes.state
 		this.cellStore.nextIteration(this.rules);
 		this.cellStore.toCellArray().forEach( (bit, index) => {
-			const colorFromState = bit.state ? this.colors.liveCell : this.colors.deadCell;
+			const colorFromState = bit.state === 1 ? this.colors.liveCell : this.colors.deadCell;
 			color.array[3 * index] = colorFromState.r;
 			color.array[3 * index + 1] = colorFromState.g;
 			color.array[3 * index + 2] = colorFromState.b;
 			color.needsUpdate = true;
-			alpha[index] = bit.state ? this.colors.liveCellAlpha : this.colors.deadCellAlpha;
+			alpha.array[index] = bit.state === 1 ? this.colors.liveCellAlpha : this.colors.deadCellAlpha;
 			alpha.needsUpdate = true;
-			state[index] = bit.state;
+			state.array[index] = bit.state;
 			state.needsUpdate = true;
 		});
 	}
@@ -164,7 +181,6 @@ class CAGame {
 
 	animate(){
 		requestAnimationFrame( this.animate.bind(this) );
-
 
 		if (this.controls.movingForward){
 			this.camera.yaw.translateZ(-this.speed);
@@ -188,10 +204,27 @@ class CAGame {
 			? (this.updateCells(), this.controls.signalStep = false) //consume signal
 			: null;
 
+		this.controls.signalHideDead
+			? (this.hideDeadCells(), this.controls.signalHideDead = false) //consume signal
+			: null;
+
+		if(this.controls.signalPlay && !this.intervalId){
+			console.log('hit g;')
+			this.intervalId = setInterval( () => {
+				this.updateCells();
+				console.log('playing');
+			}, 500);
+		} else if (this.controls.signalPlay && this.intervalId){
+			//FIX THIs
+			this.controls.signalPlay = false;
+			clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
+
+
 		if (this.controls.mouseMoved){
 			this.camera.yaw.rotation.y -= this.mouseSensitivityFactor * this.controls.horizontalPan * this.degToRad;
 			this.camera.pitch.rotation.x -= this.mouseSensitivityFactor * this.controls.verticalPan * this.degToRad;
-
 		}
 
 		this.raycaster.setFromCamera( this.centerOfScreen, this.camera.cam );
@@ -226,6 +259,7 @@ class CAGame {
 			if (this.lastCell != null){
 				//deselect old cell
 				this.colorParticleSelected(this.particles, this.lastCell, ...this.getCellColors(this.lastCell));
+				this.lastCell = null;
 			}
 		}
 
@@ -247,3 +281,8 @@ class CAGame {
 		}
 	}
 }
+
+// document.game.particles.geometry.attributes.offset.array.forEach( (o,i) => {
+//     let p = document.game.particles.geometry.attributes.position.array;
+//     console.log(i, o, p[i], p[i+1], p[i+2], '--', ...document.game.cellStore._offsetToIndex(o), document.game.cellStore._indexToOffset(p[i], p[i+1], p[i+2]))
+// });

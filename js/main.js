@@ -41,15 +41,21 @@ document.exitPointerLock = document[pointerLockApi.exit];
 
 //set-up menu
 document.addEventListener('DOMContentLoaded', () => {
-  if (!pointerLockApi) {
-      const infoBox =  document.querySelector('#menu-container');
-      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
-      return;
+  const startGame = _ => {
+    document.game = new CAGame(
+      // menuGlobalValues.dimensions.x,
+      // menuGlobalValues.dimensions.y,
+      // menuGlobalValues.dimensions.z,
+      20, 20, 20,
+      menuGlobalValues.rules
+    );
+    document.game.init();
   }
 
   //sliders for cellular automata dimensions update displayed values
+  const getGlobalsKey = id => ({length: 'x', width: 'y', height: 'z'})[id];
   const setSliderMenuGlobals = (id, val) => {
-    const k = ({length: 'x', width: 'y', height: 'z'})[id];
+    const k = getGlobalsKey(id);
     menuGlobalValues.dimensions[k] = val;
   }
   document.querySelectorAll('.voxel-cube > div input').forEach( slider => {
@@ -116,8 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
           document.querySelectorAll('.voxel-cube > div input')
                   .forEach( slider => {
-
-                    setSliderMenuGlobals(slider.parentNode.id, slider.value);
+                    const id = slider.parentNode.id;
+                    const value = slider.value;
+                    let restart = false
+                    if (menuGlobalValues.dimensions[getGlobalsKey(id)] !== value){
+                      restart = true;
+                    }
+                    setSliderMenuGlobals(id, value);
+                    restart ? document.game.newDimensions() : null;
                   });
 
           const deaths = document.querySelectorAll('.live-cells .number-store .number-neighbor.rule-selected');
@@ -139,12 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
             gameGlobalValues.pointerLocker.requestPointerLock();
           });
 
-  document.game = new CAGame(
-    // menuGlobalValues.dimensions.x,
-    // menuGlobalValues.dimensions.y,
-    // menuGlobalValues.dimensions.z,
-    50, 50, 50,
-    menuGlobalValues.rules
-  );
-  document.game.init();
+
+  if (!pointerLockApi) {
+      const infoBox =  document.querySelector('#menu-container');
+      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+      return;
+  } else if (!window.WebGLRenderingContext){
+      const infoBox =  document.querySelector('#menu-container');
+      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support WebGL. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+  } else {
+      startGame();
+  }
 });

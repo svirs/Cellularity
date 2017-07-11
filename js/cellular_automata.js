@@ -35,6 +35,7 @@ class CellularAutomataStore{
       }
       return o;
     })();
+    //[y][z][x]
     this.maskFromDeltas = [
                             [
                               [0, 1, 2],
@@ -102,10 +103,17 @@ class CellularAutomataStore{
     this.updateNeighborState(x, y, z, offset, this._flipCellState(offset))
   }
 
+  flipCellStateWithOffset(offset){
+    // debugger
+    const [x, y, z] = this._offsetToIndex(offset);
+    this.updateNeighborState(x, y, z, offset, this._flipCellState(offset))
+  }
+
   _killCell(offset){
-    const cellState = this.getCellState(offset);
+    const cellState = this._getCellState(offset);
     //and not mask to clear single bit from 1 bit flag
     this.matrix.setUint32(offset, cellState & ~this.findCellStateBitMask);
+    return 0;
   }
 
   killCell(x, y ,z){
@@ -113,18 +121,28 @@ class CellularAutomataStore{
   }
 
   _birthCell(offset){
-    this.matrix.setUint32(offset, this.getCellState(offset) | this.findCellStateBitMask);
+
+    this.matrix.setUint32(offset, this._getCellState(offset) | this.findCellStateBitMask);
+    return 1;
   }
 
   birthCell(x, y, z){
     return this._birthCell(this._indexToOffset(x, y, z));
   }
 
+  toStateArrayRaw(){
+    const arr = [];
+    for (let i = 0; i < this.matrix.byteLength; i += 4){
+      arr.push(this.matrix.getUint32(i));
+    }
+    return arr;
+  }
+
   toStateArray(){
     const arr = [];
     for (let i = 0; i < this.matrix.byteLength; i += 4){
       const index3d = this._offsetToIndex(i);
-      if (this._insideVisible(index3d)){
+      if (this._isHiddenCell(index3d)){
         continue;
       }
       arr.push(
@@ -138,7 +156,8 @@ class CellularAutomataStore{
     return arr;
   }
 
-  _insideVisible(index3d){
+  _isHiddenCell(index3d){
+    //operating on invisible boundary dead cells
     return 0 > index3d[0]|| index3d[0] >= this.maxIndexedDimensions.x ||
       0 > index3d[1] || index3d[1] >= this.maxIndexedDimensions.y ||
       0 > index3d[2] || index3d[2] >= this.maxIndexedDimensions.z;
@@ -149,7 +168,7 @@ class CellularAutomataStore{
     for (let i = 0; i < this.matrix.byteLength; i += 4){
       // if (this._offsetToIndex(i).reduce( (r, xyz) => r || (0 > xyz) || (xyz > ), false)){
       const index3d = this._offsetToIndex(i);
-      if (this._insideVisible(index3d)){
+      if (this._isHiddenCell(index3d)){
         continue;
       }
       arr.push(
@@ -167,7 +186,7 @@ class CellularAutomataStore{
     const obj = {};
     let counter = 0;
     for (let i = 0; i < this.matrix.byteLength; i += 4){
-      if(this._isCellAlive(i)){
+      if(this._isCellAlive(i) && !this._isHiddenCell(this._offsetToIndex(i))){
         const [x, y, z] = this._offsetToIndex(i)
         obj[i] = {
           x,
@@ -229,60 +248,66 @@ class CellularAutomataStore{
   nextIteration(rules){
     //birth or kill cells
     //number live neighbors
+    console.log('hit f')
     const dieRules = rules.deathWhen;
     const birthRules = rules.birthWhen;
 
-		//TODO update cell states for switched on cells
     //{offset: {x: 2, y: 4, z: 9} }
     const stateObj = this.toStateArray();
+    let newState = 0;
     stateObj.forEach( bit => {
+      // debugger
       if (bit.selfState === 1){
         //use dieRules
-        if (dieRules.length || dieRules.includes(bit.liveNeighbors)){
+        if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
           //cell dies
-          this._killCell(bit.offset)
+          newState = this._killCell(bit.offset)
         }
-      } else {
-        //use birthRules
-        if (birthRules.length || birthRules.includes(bit.liveNeighbors)){
+      } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
+          //use birthRules
           //cell gets birthed
-          this._birthCell(bit.offset)
-        }
+          newState = this._birthCell(bit.offset)
+
       }
+      this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
 
     });
-    stateObj.forEach(
-      bit => {
-      this.updateNeighborState(...[...this._offsetToIndex(bit.offset), bit.offset, bit.state]);
-    });
+    // stateObj.forEach(
+    //   bit => {
+    //     this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, bit.selfState);
+    // });
   }
 
   updateNeighborState(x, y, z, offset, state){
     //coords of chained cell with current state
+    // debugger
     const mutateInt = state ? this._neighborBirth : this._neighborDeath;
-    for (let yB = -1; yB < 2; yB++){
-      for (let xB = -1; xB < 2; xB++){
+    for (let xB = -1; xB < 2; xB++){
+      for (let yB = -1; yB < 2; yB++){
         for (let zB = -1; zB < 2; zB++){
-          if (!(yB  || xB || zB)) continue;
-          const offset = this._indexToOffset(x + xB,y + yB, z + zB);
-          const currentState = this.matrix.getUint32(offset);
-          const maskIndex = this.maskFromDeltas[yB + 1][xB + 1][zB +1];
-          mutateInt(offset, currentState, this.masks[maskIndex], this);
+          const [dX, dY, dZ] = [x + xB,y + yB, z + zB];
+          if (this._isHiddenCell([dX, dY, dZ]) || !(xB || yB || zB)) continue;
+          const neighborOffset = this._indexToOffset(dX, dY, dZ);
+          const currentNeighborState = this.matrix.getUint32(neighborOffset);
+          const maskIndex = this.maskFromDeltas[yB + 1][zB +1][xB + 1];
+          // if (neighborOffset === 364) {debugger
+          // if(offset === 164){debugger}
+          // console.log(this.matrix.getUint32(164).toString(2))
+          mutateInt(neighborOffset, currentNeighborState, this.masks[maskIndex], this);
         }
       }
     }
-
   }
 
   _neighborDeath(offset, int, mask, ctx){
+    // if(offset===164){debugger}
     ctx.matrix.setUint32(offset, int & ~mask);
-
   }
 
   _neighborBirth(offset, int, mask, ctx){
+    // if(offset === 164){
+    //   debugger
+    // }
     ctx.matrix.setUint32(offset, int | mask);
-
   }
-
-
 }
