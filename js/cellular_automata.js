@@ -56,6 +56,8 @@ class CellularAutomataStore{
 
     //this mask is for the cell itself not its neighbor
     this.findCellStateBitMask = this.masks[13]; //Magic number! 262144 = 1 + 18 0s
+    this.isUpdating = 0;
+
   }
 
   CAMatrixGenerator(x, y, z){
@@ -111,7 +113,6 @@ class CellularAutomataStore{
 
   _killCell(offset){
     const cellState = this._getCellState(offset);
-    //and not mask to clear single bit from 1 bit flag
     this.matrix.setUint32(offset, cellState & ~this.findCellStateBitMask);
     return 0;
   }
@@ -121,7 +122,6 @@ class CellularAutomataStore{
   }
 
   _birthCell(offset){
-
     this.matrix.setUint32(offset, this._getCellState(offset) | this.findCellStateBitMask);
     return 1;
   }
@@ -156,6 +156,73 @@ class CellularAutomataStore{
     return arr;
   }
 
+
+  toStateArrayPromise(){
+    return this.makeAttrArray(
+      {
+        selfState: (i) => this._isCellAlive(i) ? 1 : 0,
+        liveNeighbors: (i) => this._numberLiveNeighbors(i)
+      }
+    );
+    // .then(
+    //   arr => {
+    //     let newArr = [];
+    //     let total = arr.reduce((arr, a) => arr + a.length, 0);
+    //     return new Promise((res, rej) => {
+    //       arr.forEach(el =>{
+    //         setInterval(()=>{
+    //           newArr = newArr.concat(el);
+    //           total -= 1;
+    //           total === 0 ? res(newArr) : null;
+    //         }, 0);
+    //       });
+    //     });
+    //   }
+    // );
+  }
+
+  toCellArrayPromise(){
+    return this.makeAttrArray({state: this._isCellAlive(i) ? 1 : 0});
+  }
+
+  makeAttrArray(obj){
+    //obj is key: fxn that takes in byteoffset
+    //{selfState: (i) => this._isCellAlive(i) ? 1 : 0,
+    //liveNeighbors: this._numberLiveNeighbors}
+    //offset always a key
+    const promiseArray = [];
+    const e = 128; //4 bytes per Uint32
+    // const numberUint32 = this.matrix.byteLength / 4;
+    for (let i = 0; i < this.matrix.byteLength; i += e){
+      // promiseArray.push(new DataView(this.matrix.buffer, i, i + e));
+      promiseArray.push([i, i + e]);
+    }
+    return Promise.all(
+      promiseArray.map(bounds => {
+        return (new Promise((res, rej) => {
+          const arr = [];
+          const id = setTimeout( ()=> {
+            for(let b = bounds[0]; b < bounds[1] && b < this.matrix.byteLength; b += 4){
+              const index3d = this._offsetToIndex(b);
+              if (this._isHiddenCell(index3d)){
+                continue;
+              }
+              const attributesObject = Object.assign({}, obj, {offset: (b) => b});
+              for (let prop in attributesObject){
+                attributesObject[prop] = attributesObject[prop](b);
+              }
+
+              arr.push(attributesObject);
+            }
+            res(arr);
+          }, 0);
+        }))
+      })
+    );
+  }
+
+
+
   _isHiddenCell(index3d){
     //operating on invisible boundary dead cells
     return 0 > index3d[0]|| index3d[0] >= this.maxIndexedDimensions.x ||
@@ -182,7 +249,6 @@ class CellularAutomataStore{
   }
 
   liveCellsWithLoc(){
-    //check visibility bounds?
     const obj = {};
     let counter = 0;
     for (let i = 0; i < this.matrix.byteLength; i += 4){
@@ -195,7 +261,6 @@ class CellularAutomataStore{
         };
       }
     }
-
     return obj;
   }
 
@@ -248,39 +313,99 @@ class CellularAutomataStore{
   nextIteration(rules){
     //birth or kill cells
     //number live neighbors
-    console.log('hit f')
     const dieRules = rules.deathWhen;
     const birthRules = rules.birthWhen;
+    return this.toStateArrayPromise().then(
+      stateObj => {
+        // debugger
+        const promiseArray = [];
+        const e = 15;
+        for (let i = 0; i < stateObj.length; i++){
+        // for (let i = 0; i < stateObj.length; i += e){
+          // const slice = stateObj.slice(i, i + e);
+          const slice = stateObj[i];
+          promiseArray.push(
+            (new Promise((res, rej) => {
+              let newState = 0;
+              setTimeout( () => {
+                res(slice.map(bit => {
+                  if (bit.selfState === 1){
+                    //use dieRules
+                    if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
+                      //cell dies
+                      newState = this._killCell(bit.offset)
+                    }
+                  } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
+                    //use birthRules
+                    //cell gets birthed
+                    newState = this._birthCell(bit.offset)
 
-    //{offset: {x: 2, y: 4, z: 9} }
-    const stateObj = this.toStateArray();
-    let newState = 0;
-    stateObj.forEach( bit => {
-      // debugger
-      if (bit.selfState === 1){
-        //use dieRules
-        if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
-          //cell dies
-          newState = this._killCell(bit.offset)
+                  }
+                  // this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
+                  debugger
+                  return [...this._offsetToIndex(bit.offset), bit.offset, newState];
+                }));
+                // res(updateNeighborParams);
+              }, 0);
+            })).then((payload) => {
+              return new Promise((res, rej) => {
+                setTimeout( ()=> {
+                  this.reduceNeighbors(payload);
+                  res();
+                }, 0);
+              });
+              // setTimeout( () => {
+              //   slice.forEach(bit => {
+              //     if (bit.selfState === 1){
+              //       //use dieRules
+              //       if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
+              //         //cell dies
+              //         newState = this._killCell(bit.offset)
+              //       }
+              //     } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
+              //       //use birthRules
+              //       //cell gets birthed
+              //       newState = this._birthCell(bit.offset)
+              //
+              //     }
+              //     // this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
+              //     updateNeighborParams.push([...this._offsetToIndex(bit.offset), bit.offset, newState]);
+              //   });
+              //   res(updateNeighborParams);
+              // }, 0);
+              // return this.reduceNeighbors(payload);
+            })
+          );
         }
-      } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
-          //use birthRules
-          //cell gets birthed
-          newState = this._birthCell(bit.offset)
-
+        return Promise.all(promiseArray);
       }
-      this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
-
-    });
-    // stateObj.forEach(
-    //   bit => {
-    //     this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, bit.selfState);
-    // });
+    );
   }
+
+
+  reduceNeighbors(updateNeighborParams){
+    //part of promise
+    const promiseArray = []
+    const e = 5;
+    for (let i = 0; i < updateNeighborParams.length; i += e){
+      const slice = updateNeighborParams.slice(i, i+e);
+      promiseArray.push(
+        (new Promise((res, rej) => {
+          const id = setTimeout( () => {
+            slice.forEach(b => this.updateNeighborState(...b));
+            res(id);
+          }, 0);
+        }))
+      );
+
+    }
+    return Promise.all(promiseArray);
+  }
+
 
   updateNeighborState(x, y, z, offset, state){
     //coords of chained cell with current state
-    // debugger
+    //part of promise
     const mutateInt = state ? this._neighborBirth : this._neighborDeath;
     for (let xB = -1; xB < 2; xB++){
       for (let yB = -1; yB < 2; yB++){

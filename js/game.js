@@ -50,6 +50,7 @@ class CAGame {
 		this.particles = null;
 
 		this.intervalId = null;
+		this.updateSignaled = false;
 	}
 
 
@@ -159,10 +160,9 @@ class CAGame {
 	}
 
 	updateCells(){
-		const color = this.particles.geometry.attributes.customColor
-		const alpha = this.particles.geometry.attributes.customAlpha
-		const state = this.particles.geometry.attributes.state
-		this.cellStore.nextIteration(this.rules);
+		const color = this.particles.geometry.attributes.customColor;
+		const alpha = this.particles.geometry.attributes.customAlpha;
+		const state = this.particles.geometry.attributes.state;
 		this.cellStore.toCellArray().forEach( (bit, index) => {
 			const colorFromState = bit.state === 1 ? this.colors.liveCell : this.colors.deadCell;
 			color.array[3 * index] = colorFromState.r;
@@ -200,32 +200,40 @@ class CAGame {
 			this.camera.yaw.translateY(-this.speed);
 		}
 
-		this.controls.signalStep
-			? (this.updateCells(), this.controls.signalStep = false) //consume signal
-			: null;
 
 		this.controls.signalHideDead
 			? (this.hideDeadCells(), this.controls.signalHideDead = false) //consume signal
 			: null;
 
+		if (this.controls.signalStep) {
+			this.controls.signalStep = false;
+			this.cellStore.nextIteration(this.rules).then(
+				s => {
+					this.updateCells();
+				}
+			);
+
+		}
+
 		if(this.controls.signalPlay && !this.intervalId){
 			this.controls.signalPlay = false;
-			debugger
 			this.intervalId = setInterval( () => {
 				this.updateCells();
-			}, 500);
-		} else if (this.controls.signalPlay && this.intervalId !== null){
+			}, 1000);
+		} else if (this.controls.signalPlay && this.intervalId){
 			//FIX THIs
 			this.controls.signalPlay = false;
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
 
-
 		if (this.controls.mouseMoved){
 			this.camera.yaw.rotation.y -= this.mouseSensitivityFactor * this.controls.horizontalPan * this.degToRad;
 			this.camera.pitch.rotation.x -= this.mouseSensitivityFactor * this.controls.verticalPan * this.degToRad;
 		}
+
+
+
 
 		this.raycaster.setFromCamera( this.centerOfScreen, this.camera.cam );
 		const intersected = this.raycaster.intersectObject( this.particles );
