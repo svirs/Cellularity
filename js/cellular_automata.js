@@ -164,21 +164,6 @@ class CellularAutomataStore{
         liveNeighbors: (i) => this._numberLiveNeighbors(i)
       }
     );
-    // .then(
-    //   arr => {
-    //     let newArr = [];
-    //     let total = arr.reduce((arr, a) => arr + a.length, 0);
-    //     return new Promise((res, rej) => {
-    //       arr.forEach(el =>{
-    //         setInterval(()=>{
-    //           newArr = newArr.concat(el);
-    //           total -= 1;
-    //           total === 0 ? res(newArr) : null;
-    //         }, 0);
-    //       });
-    //     });
-    //   }
-    // );
   }
 
   toCellArrayPromise(){
@@ -191,7 +176,7 @@ class CellularAutomataStore{
     //liveNeighbors: this._numberLiveNeighbors}
     //offset always a key
     const promiseArray = [];
-    const e = 128; //4 bytes per Uint32
+    const e = 64; //4 bytes per Uint32
     // const numberUint32 = this.matrix.byteLength / 4;
     for (let i = 0; i < this.matrix.byteLength; i += e){
       // promiseArray.push(new DataView(this.matrix.buffer, i, i + e));
@@ -317,7 +302,7 @@ class CellularAutomataStore{
     const birthRules = rules.birthWhen;
     return this.toStateArrayPromise().then(
       stateObj => {
-        // debugger
+
         const promiseArray = [];
         const e = 15;
         for (let i = 0; i < stateObj.length; i++){
@@ -326,24 +311,24 @@ class CellularAutomataStore{
           const slice = stateObj[i];
           promiseArray.push(
             (new Promise((res, rej) => {
-              let newState = 0;
               setTimeout( () => {
                 res(slice.map(bit => {
-                  if (bit.selfState === 1){
+                  let state = bit.selfState;
+                  if (state === 1){
                     //use dieRules
                     if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
                       //cell dies
-                      newState = this._killCell(bit.offset)
+                      state = this._killCell(bit.offset)
                     }
                   } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
                     //use birthRules
                     //cell gets birthed
-                    newState = this._birthCell(bit.offset)
+                    state = this._birthCell(bit.offset)
 
                   }
-                  // this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
-                  debugger
-                  return [...this._offsetToIndex(bit.offset), bit.offset, newState];
+                  // this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, state)
+
+                  return [...this._offsetToIndex(bit.offset), bit.offset, state];
                 }));
                 // res(updateNeighborParams);
               }, 0);
@@ -354,26 +339,6 @@ class CellularAutomataStore{
                   res();
                 }, 0);
               });
-              // setTimeout( () => {
-              //   slice.forEach(bit => {
-              //     if (bit.selfState === 1){
-              //       //use dieRules
-              //       if (dieRules.length && dieRules.includes(bit.liveNeighbors)){
-              //         //cell dies
-              //         newState = this._killCell(bit.offset)
-              //       }
-              //     } else if (birthRules.length && birthRules.includes(bit.liveNeighbors)){
-              //       //use birthRules
-              //       //cell gets birthed
-              //       newState = this._birthCell(bit.offset)
-              //
-              //     }
-              //     // this.updateNeighborState(...[...this._offsetToIndex(bit.offset)], bit.offset, newState)
-              //     updateNeighborParams.push([...this._offsetToIndex(bit.offset), bit.offset, newState]);
-              //   });
-              //   res(updateNeighborParams);
-              // }, 0);
-              // return this.reduceNeighbors(payload);
             })
           );
         }
