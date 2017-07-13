@@ -11,16 +11,16 @@
   	<script src="js/builds/three.min.js"></script>
   	<!-- <script src="js/builds/stats.min.js"></script> -->
 		<script type="x-shader/x-vertex" id="vertexshader">
-		    attribute float customAlpha;
+		    attribute float alpha;
 		    varying float vAlpha;
 
 				uniform vec4 origin;
 
-				attribute vec3 customColor;
+				attribute vec3 color;
 				varying vec3 vColor;
 		    void main() {
-		        vAlpha = customAlpha;
-		        vColor = customColor;
+		        vAlpha = alpha;
+		        vColor = color;
 		        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 						float cameraDist = distance(mvPosition, origin);
 		        gl_PointSize = 300.0 / cameraDist;
@@ -30,8 +30,10 @@
 		<script type="x-shader/x-fragment" id="fragmentshader">
 		    varying vec3 vColor;
 		    varying float vAlpha;
+				uniform sampler2D texture;
+
 		    void main() {
-		        gl_FragColor = vec4( vColor, vAlpha );
+		        gl_FragColor = vec4( vColor, vAlpha ) * texture2D( texture, gl_PointCoord );
 		    }
 		</script>
 

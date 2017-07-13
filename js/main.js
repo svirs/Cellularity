@@ -57,11 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = getGlobalsKey(id);
     menuGlobalValues.dimensions[k] = val;
   }
-  document.querySelectorAll('.voxel-cube > div input').forEach( slider => {
+  document.querySelectorAll('.voxel-cube > div input').forEach( (slider, idx, arr) => {
     //initial slider setting
     setSliderMenuGlobals(slider.parentNode.id, slider.value);
     slider.addEventListener('input', () => {
       slider.parentNode.querySelector('.display').innerHTML = slider.value;
+      //allow other sliders to have new max
+      const slidersSetAtOne = Array.from(arr).reduce( (a, el) => {
+        return a + (el.value === '1' ? 1 : 0);
+      }, 0);
+      arr.forEach( el => {
+        if (el === slider){
+          return;
+        } else if (slidersSetAtOne === 1){
+          el.max = 200;
+        } else if (slidersSetAtOne === 2) {
+          el.value === '1' ? null : (el.max = 500)
+        } else {
+          el.max = 50;
+        }
+      });
     });
   });
 

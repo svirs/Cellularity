@@ -1,6 +1,6 @@
-body * {
+/*body * {
   border: 1px solid red;
-}
+}*/
 
 #crosshairs {
   z-index: 500;

@@ -20,6 +20,8 @@ class CAGame {
 		this.centerOfScreen = new THREE.Vector2(0, 0);
 
 		this.scene = new THREE.Scene();
+		// this.scene.background = new THREE.Color(0xf0f0f0);
+		this.scene.background = new THREE.Color(0x000000);
 
 		this.camera = this.initCamera(0.1, 1000);
 		this.scene.add(this.camera.yaw);
@@ -39,7 +41,7 @@ class CAGame {
 		this.degToRad = Math.PI / 180;
 		this.pi2 = Math.Pi / 2;
 		this.mouseSensitivityFactor = 0.1;
-		this.speed = .35;
+		this.speed = .33;
 
 		this.raycaster = new THREE.Raycaster();
 		this.raycaster.params.Points.threshold = 0.5;
@@ -50,9 +52,9 @@ class CAGame {
 		this.lastCell = null;
 		this.particles = null;
 
-		this.intervalId = null;
+		this.promisedAnimation = null;
 		this.updateSignaled = false;
-
+		this.isPlaying = false;
 		this.animationId = null;
 	}
 
@@ -101,15 +103,15 @@ class CAGame {
 
 
 	colorParticleSelected(particleSystem, index, color, alpha){
-		const indexFactor = particleSystem.geometry.attributes.customColor.itemSize;
-		const colorArr = particleSystem.geometry.attributes.customColor.array;
+		const indexFactor = particleSystem.geometry.attributes.color.itemSize;
+		const colorArr = particleSystem.geometry.attributes.color.array;
 		colorArr[index * indexFactor] = color.r;
 		colorArr[index * indexFactor + 1] = color.g;
 		colorArr[index * indexFactor + 2] = color.b;
-		particleSystem.geometry.attributes.customColor.needsUpdate = true;
+		particleSystem.geometry.attributes.color.needsUpdate = true;
 
-		particleSystem.geometry.attributes.customAlpha.array[index] = alpha;
-		particleSystem.geometry.attributes.customAlpha.needsUpdate = true;
+		particleSystem.geometry.attributes.alpha.array[index] = alpha;
+		particleSystem.geometry.attributes.alpha.needsUpdate = true;
 
 	}
 
@@ -126,8 +128,8 @@ class CAGame {
 
 		const particleSystem = new THREE.BufferGeometry();
 		particleSystem.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-		particleSystem.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-		particleSystem.addAttribute('customAlpha', new THREE.BufferAttribute(alpha, 1));
+		particleSystem.addAttribute('color', new THREE.BufferAttribute(colors, 3));
+		particleSystem.addAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
 		particleSystem.addAttribute('offset', new THREE.BufferAttribute(offset, 1));
 		particleSystem.addAttribute('state', new THREE.BufferAttribute(state, 1));
 
@@ -135,9 +137,9 @@ class CAGame {
 		allCells.forEach((bit, index)=> {
 			//bit.state, bit.offset
 			const [x, y, z] = this.cellStore._offsetToIndex(bit.offset);
-			positions[3 * index] = x;
-			positions[3 * index + 1] = y;
-			positions[3 * index + 2] = z;
+			positions[3 * index] = 3 * x + Math.random();
+			positions[3 * index + 1] = 3 * y + Math.random();
+			positions[3 * index + 2] = 3 * z + Math.random();
 			const colorFromState = bit.state ? this.colors.liveCell : this.colors.deadCell;
 			colors[3 * index] = colorFromState.r;
 			colors[3 * index + 1] = colorFromState.g;
@@ -151,12 +153,16 @@ class CAGame {
 
 		});
 
+		const uniforms = {
+						texture: {value: new THREE.TextureLoader().load("images/circle.png")}
+					};
 
 		const particleMaterial = new THREE.ShaderMaterial({
-				// vertexColors: THREE.VertexColors,
+				uniforms,
 				vertexShader: document.getElementById('vertexshader').textContent,
         fragmentShader: document.getElementById('fragmentshader').textContent,
 				transparent: true,
+				depthTest: false
 			});
 		// const particleShaderMaterial = new THREE.ShaderMaterial();
 
@@ -164,35 +170,37 @@ class CAGame {
 		this.particles.name = 'particles';
 		this.scene.add(this.particles);
 
-		this.scene.background = new THREE.Color( 0x000000 )
 
-		// this.camera.yaw.translateZ(10);
-		// this.camera.yaw.translateX(-10);
-		// this.camera.yaw.rotation.y -= 5;
+		this.camera.yaw.translateZ(10);
+		this.camera.yaw.translateX(-10);
+		this.camera.yaw.rotation.y -= 5;
 		this.animate();
 	}
 
 	hideDeadCells(){
 		[this.colors.deadCellAlpha, this.colors.deadCellAlphaHide] = [this.colors.deadCellAlphaHide, this.colors.deadCellAlpha]
-		const alpha = this.particles.geometry.attributes.customAlpha.array;
+		const alpha = this.particles.geometry.attributes.alpha.array;
 		this.particles.geometry.attributes.state.array.forEach((bit, index) =>{
 			if (bit === 0){
 				alpha[index] = this.colors.deadCellAlpha;
 			}
 		});
-		this.particles.geometry.attributes.customAlpha.needsUpdate = true;
+		this.particles.geometry.attributes.alpha.needsUpdate = true;
 	}
 
 	updateCells(){
-		const color = this.particles.geometry.attributes.customColor;
-		const alpha = this.particles.geometry.attributes.customAlpha;
+		const colors = this.particles.geometry.attributes.color;
+		const alpha = this.particles.geometry.attributes.alpha;
 		const state = this.particles.geometry.attributes.state;
+		const positions = this.particles.geometry.attributes.position;
+
 		this.cellStore.toCellArray().forEach( (bit, index) => {
 			const colorFromState = bit.state === 1 ? this.colors.liveCell : this.colors.deadCell;
-			color.array[3 * index] = colorFromState.r;
-			color.array[3 * index + 1] = colorFromState.g;
-			color.array[3 * index + 2] = colorFromState.b;
-			color.needsUpdate = true;
+			colors.array[3 * index] = colorFromState.r;
+			colors.array[3 * index + 1] = colorFromState.g;
+			colors.array[3 * index + 2] = colorFromState.b;
+			colors.needsUpdate = true;
+
 			alpha.array[index] = bit.state === 1 ? this.colors.liveCellAlpha : this.colors.deadCellAlpha;
 			alpha.needsUpdate = true;
 			state.array[index] = bit.state;
@@ -239,23 +247,38 @@ class CAGame {
 
 		}
 
-		if(this.controls.signalPlay && !this.intervalId){
+		if(this.controls.signalPlay && !this.promisedAnimation){
 			this.controls.signalPlay = false;
-			// this.intervalId = setInterval( () =>{
+			this.isPlaying = true;
+			console.log('started')
+			// this.promisedAnimation = setInterval( () =>{
 			// 	this.cellStore.nextIteration(this.rules)
 			// 								.then(s => this.updateCells());
 			// }, 2500);
 			const playAnimation = _ => {
-				this.cellStore.nextIteration(this.rules)
-											.then( _ => this.updateCells())
-											.then(playAnimation);
+				return this.cellStore.nextIteration(this.rules)
+						 								 .then( _ => this.updateCells())
+													 	 .then( _ => this.isPlaying ? playAnimation() : null);
 			};
-			this.intervalId = playAnimation();
-		} else if (this.controls.signalPlay && this.intervalId){
+			this.promisedAnimation = playAnimation();
+		} else if (this.controls.signalPlay && this.promisedAnimation){
+			console.log('end')
 			this.controls.signalPlay = false;
-			// clearInterval(this.intervalId);
-			this.intervalId = null;
+			this.isPlaying = false;
+			// clearInterval(this.promisedAnimation);
+			this.promisedAnimation = null;
 		}
+
+
+			if (this.controls.expand){
+				this.controls.expand = false;
+				this.moveAll(1.1);
+			}
+			if (this.controls.contract){
+				this.controls.contract = false;
+				this.moveAll(0.9);
+			}
+
 
 
 
@@ -305,6 +328,17 @@ class CAGame {
 		}
 
 	  this.renderer.render(this.scene, this.camera.cam);
+	}
+
+	moveAll(int){
+		const positions = this.particles.geometry.attributes.position.array;
+		// debugger
+		for(let index = 0; index < positions.byteLength; index++){
+			positions[3 * index] *= int;
+			positions[3 * index + 1] *= int;
+			positions[3 * index + 2] *= int;
+		}
+		this.particles.geometry.attributes.position.needsUpdate = true;
 	}
 
 	getCellColors(index, opposite = false){

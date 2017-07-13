@@ -20,6 +20,8 @@ class Movement {
     this.signalPlay = false;
     this.signalHideDead = false;
     this.addEvents();
+    this.expand = false;
+    this.contract = false;
 }
 
 
@@ -116,6 +118,16 @@ class Movement {
             this.signalHideDead = true;
             //on up only
             break;
+          case 'q':
+          case 'Q':
+            this.contract = true;
+            //on up only
+            break;
+          case 'e':
+          case 'E':
+            this.expand = true;
+            //on up only
+            break;
           default:
             break;
         }
@@ -146,6 +158,10 @@ false
           case 'g':
             return;
           case 'h':
+            return;
+          case 'q':
+            return;
+          case 'e':
             return;
           default:
             return;
