@@ -43,11 +43,9 @@ document.exitPointerLock = document[pointerLockApi.exit];
 document.addEventListener('DOMContentLoaded', () => {
   const startGame = _ => {
     document.game = new CAGame(
-      // menuGlobalValues.dimensions.x,
-      // menuGlobalValues.dimensions.y,
-      // menuGlobalValues.dimensions.z,
-      // 100, 100, 100,
-      25, 25, 25,
+      menuGlobalValues.dimensions.x,
+      menuGlobalValues.dimensions.y,
+      menuGlobalValues.dimensions.z,
       menuGlobalValues.rules
     );
     document.game.init();
@@ -120,24 +118,24 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', _ => {
           menuGlobalValues.rules.deathWhen = replaceGlobalRules('.live-cells');
           menuGlobalValues.rules.birthWhen = replaceGlobalRules('.dead-cells');
-
+          let restart = false;
           document.querySelectorAll('.voxel-cube > div input')
                   .forEach( slider => {
                     const id = slider.parentNode.id;
                     const value = slider.value;
-                    let restart = false
-                    if (menuGlobalValues.dimensions[getGlobalsKey(id)] !== value){
+                    setSliderMenuGlobals(id, value);
+                    if (menuGlobalValues.dimensions[getGlobalsKey(id)] !== document.game.sliderVariables[getGlobalsKey(id)]){
                       restart = true;
                     }
-                    setSliderMenuGlobals(id, value);
-                    restart ? document.game.newDimensions() : null;
                   });
 
           const deaths = document.querySelectorAll('.live-cells .number-store .number-neighbor.rule-selected');
           const births = document.querySelectorAll('.dead-cells .number-store .number-neighbor.rule-selected');
+          restart ? document.game.restartWithNewDimensions(menuGlobalValues.dimensions.x, menuGlobalValues.dimensions.y, menuGlobalValues.dimensions.z) : null;
 
           document.game.rules.deathWhen = Array.from(deaths).map(tag => parseInt(tag.innerHTML));
           document.game.rules.birthWhen = Array.from(births).map(tag => parseInt(tag.innerHTML));
+
         });
         return;
       default:

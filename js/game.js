@@ -1,7 +1,7 @@
 class CAGame {
 	constructor(length, width, height, rules){
 		this.rules = rules;
-
+		this.sliderVariables = {x: length, y: width, z: height};
 
 		this.colors = {
 			deadCell: new THREE.Color(0xff0000),
@@ -13,7 +13,8 @@ class CAGame {
 			selectedCellAlpha: 0.5,
 		};
 
-		this.cellStore =  new CellularAutomataStore(length, width, height);
+		// this.cellStore =  new CellularAutomataStore(length, width, height);
+		this.cellStore =  this.initCellStore(this.sliderVariables.x, this.sliderVariables.y, this.sliderVariables.z);
 		this.controls = new Movement();
 
 		this.centerOfScreen = new THREE.Vector2(0, 0);
@@ -51,9 +52,32 @@ class CAGame {
 
 		this.intervalId = null;
 		this.updateSignaled = false;
+
+		this.animationId = null;
 	}
 
+	initCellStore(x, y, z){
+		return new CellularAutomataStore(parseInt(x), parseInt(y), parseInt(z));
+	}
 
+	restartWithNewDimensions(x, y, z){
+		console.log('restarted')
+		this.sliderVariables.x = x;
+		this.sliderVariables.y = y;
+		this.sliderVariables.z = z;
+		cancelAnimationFrame(this.animationId);
+
+		this.cellStore = this.initCellStore(x, y, z);
+
+		this.particles.geometry.vertices = [];
+		this.particles.geometry.dispose();
+		this.particles.material.dispose();
+		this.scene.remove(this.particles);
+		// this.particles.dispose();
+		console.log('post animation cancel frame')
+		this.init();
+		console.log('post re-init')
+	}
 
 	initCamera(near, far){
 		const cam = new THREE.PerspectiveCamera( 90, (window.innerWidth / window.innerHeight), near, far );
@@ -180,7 +204,7 @@ class CAGame {
 
 
 	animate(){
-		requestAnimationFrame( this.animate.bind(this) );
+		this.animationId = requestAnimationFrame( this.animate.bind(this) );
 
 		if (this.controls.movingForward){
 			this.camera.yaw.translateZ(-this.speed);
