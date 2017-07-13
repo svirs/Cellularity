@@ -57,24 +57,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = getGlobalsKey(id);
     menuGlobalValues.dimensions[k] = val;
   }
+  const updateSliderLabel = slider => slider.parentNode.querySelector('.display').innerHTML = slider.value;
   document.querySelectorAll('.voxel-cube > div input').forEach( (slider, idx, arr) => {
     //initial slider setting
     setSliderMenuGlobals(slider.parentNode.id, slider.value);
     slider.addEventListener('input', () => {
-      slider.parentNode.querySelector('.display').innerHTML = slider.value;
+      // slider.parentNode.querySelector('.display').innerHTML = slider.value;
+      updateSliderLabel(slider);
       //allow other sliders to have new max
       const slidersSetAtOne = Array.from(arr).reduce( (a, el) => {
         return a + (el.value === '1' ? 1 : 0);
       }, 0);
-      arr.forEach( el => {
-        if (el === slider){
-          return;
-        } else if (slidersSetAtOne === 1){
+      console.log(slidersSetAtOne)
+      arr.forEach((el) => {
+        if (slidersSetAtOne === 1){
           el.max = 200;
+          parseInt(el.value) > el.max ? (el.value = el.max) : null;
+          updateSliderLabel(el);
         } else if (slidersSetAtOne === 2) {
-          el.value === '1' ? null : (el.max = 500)
+          el.value === '1' ? null : (el.max = 500);
         } else {
           el.max = 50;
+          parseInt(el.value) > parseInt(el.max) ? (el.value = el.max) : null;
+          updateSliderLabel(el);
         }
       });
     });
@@ -82,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   //populate clickable cells for rules
   const toggleSelected = e => e.currentTarget.classList.toggle('rule-selected');
-  const toggleSelectedWhenDragging = e => {
-    if (e.buttons !== 0) toggleSelected(e);
-  };
+  // const toggleSelectedWhenDragging = e => {
+  //   if (e.buttons !== 0) toggleSelected(e);
+  // };
   document.querySelectorAll('.cell-rules .number-store').forEach( ruleBox => {
     const numberNeighborTag = document.createElement("DIV");
     numberNeighborTag.classList.add("number-neighbor");
@@ -102,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const node = numberNeighborTag.cloneNode();
       node.innerHTML = i;
       node.addEventListener('click', toggleSelected);
-      node.addEventListener('mouseover', toggleSelectedWhenDragging);
+      // node.addEventListener('mouseover', toggleSelectedWhenDragging);
 
       ruleBox.querySelector(`.${chooseRow(i)}`).appendChild(node);
     }
@@ -110,12 +115,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   //buttons
   const deselect = className => {
+    if (className === '.dead-cells'){
+      document.game.rules.deathWhen = [];
+    } else if (className === '.live-cells') {
+      document.game.rules.birthWhen = [];
+    }
     document.querySelector(className)
-            .querySelectorAll('.rule-selected')
-            .forEach(node => node.classList.remove('rule-selected'));
+            .querySelectorAll('.rule-selected, .rule-activated')
+            .forEach(node => {
+              node.classList.remove('rule-selected');
+              node.classList.remove('rule-activated');
+            });
   };
   const replaceGlobalRules = className => {
-    return Array.from(document.querySelectorAll(`${className} .rule-selected`))
+    document.querySelectorAll('.rule-selected').forEach(node => {
+      node.classList.remove('rule-selected');
+      node.classList.add('rule-activated');
+    });
+
+    return Array.from(document.querySelectorAll(`${className} .rule-activated`))
                 .map(node => parseInt(node.innerHTML));
   };
 
@@ -144,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                   });
 
-          const deaths = document.querySelectorAll('.live-cells .number-store .number-neighbor.rule-selected');
-          const births = document.querySelectorAll('.dead-cells .number-store .number-neighbor.rule-selected');
+          const deaths = document.querySelectorAll('.live-cells .number-store .number-neighbor.rule-activated');
+          const births = document.querySelectorAll('.dead-cells .number-store .number-neighbor.rule-activated');
           restart ? document.game.restartWithNewDimensions(menuGlobalValues.dimensions.x, menuGlobalValues.dimensions.y, menuGlobalValues.dimensions.z) : null;
 
           document.game.rules.deathWhen = Array.from(deaths).map(tag => parseInt(tag.innerHTML));

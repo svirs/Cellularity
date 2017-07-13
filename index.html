@@ -19,12 +19,12 @@
 				attribute vec3 color;
 				varying vec3 vColor;
 		    void main() {
-		        vAlpha = alpha;
-		        vColor = color;
-		        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-						float cameraDist = distance(mvPosition, origin);
-		        gl_PointSize = 300.0 / cameraDist;
-		        gl_Position = projectionMatrix * mvPosition;
+	        vAlpha = alpha;
+	        vColor = color;
+	        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+					float cameraDist = distance(mvPosition, origin);
+	        gl_PointSize = 300.0 / cameraDist;
+	        gl_Position = projectionMatrix * mvPosition;
 		    }
 		</script>
 		<script type="x-shader/x-fragment" id="fragmentshader">
@@ -33,7 +33,7 @@
 				uniform sampler2D texture;
 
 		    void main() {
-		        gl_FragColor = vec4( vColor, vAlpha ) * texture2D( texture, gl_PointCoord );
+	        gl_FragColor = vec4( vColor, vAlpha ) * texture2D( texture, gl_PointCoord );
 		    }
 		</script>
 
@@ -46,22 +46,23 @@
       <div id='menu-screen'>
         <div class="game-options">
           <div class="voxel-cube">
+						<div>Game dimensions</div>
             <div id='length'>
-              <span class='display'>20</span>
+              <span>X:</span><span class='display'>20</span>
               <input type="range" min="1" max="50" value="20">
             </div>
             <div id='width'>
-              <span class='display'>20</span>
+              <span>Y:</span><span class='display'>20</span>
               <input type="range" min="1" max="50" value="20">
             </div>
             <div id='height'>
-              <span class='display'>20</span>
+              <span>Z:</span><span class='display'>20</span>
               <input type="range" min="1" max="50" value="20">
             </div>
           </div>
           <div class="cell-rules">
             <div class="dead-cells">
-              <div class='info'># of living adjacents that birthes a cell, others stay dead.</div>
+              <div class='info'>A cell will come alive with these many living neighbors:</div>
               <div class='number-store'>
                 <div class="row1"></div>
                 <div class="row2"></div>
@@ -69,7 +70,7 @@
               </div>
             </div>
             <div class="live-cells">
-              <div class='info'># of living adjacents that kills a cell, others survive.</div>
+              <div class='info'>A cell will die if these many neighbors are alive around it:</div>
               <div class='number-store'>
                 <div class="row1"></div>
                 <div class="row2"></div>

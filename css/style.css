@@ -40,12 +40,26 @@
 
 .game-options {
   margin-right: 3vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-options > .voxel-cube {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .game-options > .voxel-cube > div {
   display: flex;
   flex-direction: row;
+  width: 100%;
+  text-align: center;
 }
+
 
 .game-options > .voxel-cube > div > .display {
   width: 35px;
@@ -56,12 +70,23 @@
   flex-grow: 1;
 }
 
+
+.game-options > .cell-rules {
+  padding: 1vw 0;
+}
+
+.game-options > .cell-rules > .live-cells {
+  padding: 1vw 0;
+}
+
 .game-options > .cell-rules > div > .number-store > div {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
 
+/* selections */
+/* not chosen */
 .number-store > div > .number-neighbor {
   flex: 1;
   text-align: center;
@@ -70,15 +95,25 @@
   user-select: none;
 }
 
+
 div.number-neighbor:hover {
   color: orange;
   background-color: grey;
 }
 
+/*clicked on to be activated */
 .rule-selected {
   color: red !important;
   background-color: black !important;
 }
+
+/* activated */
+.rule-activated {
+  color: white !important;
+  background-color: green !important;
+}
+/* end rule selections */
+
 
 .info {
   text-align: center;
@@ -92,7 +127,6 @@ div.number-neighbor:hover {
 .game-options button {
   padding: 2px 10px;
 }
-
 
 
 .game-rules {

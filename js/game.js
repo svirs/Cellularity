@@ -5,12 +5,12 @@ class CAGame {
 
 		this.colors = {
 			deadCell: new THREE.Color(0xff0000),
-			deadCellAlpha: 0.4,
+			deadCellAlpha: 0.5,
 			deadCellAlphaHide: 0,
 			liveCell: new THREE.Color(0x00ff00),
 			liveCellAlpha: 1,
 			selectedCell: new THREE.Color(0x0000ff),
-			selectedCellAlpha: 0.5,
+			selectedCellAlpha: 0.6,
 		};
 
 		// this.cellStore =  new CellularAutomataStore(length, width, height);
@@ -23,7 +23,7 @@ class CAGame {
 		// this.scene.background = new THREE.Color(0xf0f0f0);
 		this.scene.background = new THREE.Color(0x000000);
 
-		this.camera = this.initCamera(0.1, 1000);
+		this.camera = this.initCamera(0.1, 1000,);
 		this.scene.add(this.camera.yaw);
 
 
@@ -162,7 +162,8 @@ class CAGame {
 				vertexShader: document.getElementById('vertexshader').textContent,
         fragmentShader: document.getElementById('fragmentshader').textContent,
 				transparent: true,
-				depthTest: false
+				depthTest: false,
+				depthWrite: false
 			});
 		// const particleShaderMaterial = new THREE.ShaderMaterial();
 
@@ -207,8 +208,6 @@ class CAGame {
 			state.needsUpdate = true;
 		});
 	}
-
-
 
 
 	animate(){
