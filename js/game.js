@@ -5,7 +5,7 @@ class CAGame {
 
 		this.colors = {
 			deadCell: new THREE.Color(0xff0000),
-			deadCellAlpha: 0.1,
+			deadCellAlpha: 0.4,
 			deadCellAlphaHide: 0,
 			liveCell: new THREE.Color(0x00ff00),
 			liveCellAlpha: 1,
@@ -140,7 +140,7 @@ class CAGame {
 		this.particles.name = 'particles';
 		this.scene.add(this.particles);
 
-		this.scene.background = new THREE.Color( 0xf0f0f0 )
+		this.scene.background = new THREE.Color( 0x000000 )
 
 		// this.camera.yaw.translateZ(10);
 		// this.camera.yaw.translateX(-10);
@@ -217,19 +217,26 @@ class CAGame {
 
 		if(this.controls.signalPlay && !this.intervalId){
 			this.controls.signalPlay = false;
-			this.intervalId = setInterval( () =>{
+			// this.intervalId = setInterval( () =>{
+			// 	this.cellStore.nextIteration(this.rules)
+			// 								.then(s => this.updateCells());
+			// }, 2500);
+			const playAnimation = _ => {
 				this.cellStore.nextIteration(this.rules)
-											.then(s => this.updateCells());
-			}, 2500);
+											.then( _ => this.updateCells())
+											.then(playAnimation);
+			};
+			this.intervalId = playAnimation();
 		} else if (this.controls.signalPlay && this.intervalId){
-			//FIX THIs
-			debugger
 			this.controls.signalPlay = false;
-			clearInterval(this.intervalId);
+			// clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
 
+
+
 		if (this.controls.mouseMoved){
+			this.controls.mouseMoved = false;
 			this.camera.yaw.rotation.y -= this.mouseSensitivityFactor * this.controls.horizontalPan * this.degToRad;
 			this.camera.pitch.rotation.x -= this.mouseSensitivityFactor * this.controls.verticalPan * this.degToRad;
 		}

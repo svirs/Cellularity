@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // menuGlobalValues.dimensions.x,
       // menuGlobalValues.dimensions.y,
       // menuGlobalValues.dimensions.z,
-      30, 30, 30,
+      // 100, 100, 100,
+      25, 25, 25,
       menuGlobalValues.rules
     );
     document.game.init();
