@@ -184,11 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
   //vr-settings
   const vrButton = document.querySelector('.vr-settings > button');
   vrButton.addEventListener('click', () => {
-            if (navigator.getVRDisplays === undefined) alert('Sorry, your browser does not support WebVR');
+            if (navigator.getVRDisplays === undefined){
+              alert('Sorry, your browser does not support WebVR');
+            }
             else {
               vrButton.classList.toggle('rule-selected');
               if (vrButton.classList.contains('rule-selected')){
-                
+                document.game.swapCam();
               }
             }
           })
