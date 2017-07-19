@@ -46,18 +46,18 @@
       <div id='menu-screen'>
         <div class="game-options">
           <div class="voxel-cube">
-						<div>Game dimensions</div>
+						<p id='dimensions-title'>Game dimensions</p>
             <div id='length'>
-              <span>X:</span><span class='display'>20</span>
-              <input type="range" min="1" max="50" value="20">
+              <span>X:</span><span class='display'>15</span>
+              <input type="range" min="1" max="50" value="15">
             </div>
             <div id='width'>
-              <span>Y:</span><span class='display'>20</span>
-              <input type="range" min="1" max="50" value="20">
+              <span>Y:</span><span class='display'>15</span>
+              <input type="range" min="1" max="50" value="15">
             </div>
             <div id='height'>
-              <span>Z:</span><span class='display'>20</span>
-              <input type="range" min="1" max="50" value="20">
+              <span>Z:</span><span class='display'>15</span>
+              <input type="range" min="1" max="50" value="15">
             </div>
           </div>
           <div class="cell-rules">
@@ -86,10 +86,38 @@
         </div>
         <div class="game-rules">
           <div class="info">
-            ESC to open menu, WASD to move, shift to sink,
-						<br/>spacebar to float up, click cells, f to step iteration
-						<br/>g to play, h to hide dead cells
+						Cellularity is a 3D <a href="https://en.wikipedia.org/wiki/Cellular_automaton">cellular automata</a> viewer
+						<br>
+						with cells havings two states (living and dead)
+						<br>
+						like <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway's Game of Life!</a>
+						<br>
+						Dead cells can come alive and living cells can die based on
+						<br>
+						how many of their 26 neighbors are alive!
+						<br><br>
+						<strong>
+							CONTROLS
+						</strong>
+						<br>
+						ESC to open menu, WASD to move, SHIFT to sink,
+						<br/>
+						SPACEBAR to float up, F to step iteration
+						<br>
+						G to animate, H to hide dead cells,
+						<br/>
+						click cells with mouse to manually change!
           </div>
+					<div class="presets">
+						<button type="button" name="2d" class="2d">2D</button>
+						<button type="button" name="blink" class="blink">Blink Cube</button>
+						<button type="button" name="wacky" class="wacky">Wacky Cube</button>
+					</div>
+					<div class="vr-settings">
+						<button type="button" name="stereo" class="stereo-cam">Enable Stereo Camera and Motion Controls</button>
+						<!-- <span class="fov-info">Eye Distance: </span> -->
+						<!-- <input type="range" min="1" max="50" value="15"> -->
+					</div>
           <div class="start-game">
             <button type="button" name="start">Play!</button>
           </div>

@@ -8,7 +8,9 @@ const menuGlobalValues = {
     x: null,
     y: null,
     z: null
-  }
+  },
+  stereoCamera: false,
+  fov: null
 };
 //pointerLockApi is global
 const pointerLockApi = ( () => {
@@ -176,12 +178,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  //presets
+
+
+  //vr-settings
+  const vrButton = document.querySelector('.vr-settings > button');
+  vrButton.addEventListener('click', () => {
+            if (navigator.getVRDisplays === undefined) alert('Sorry, your browser does not support WebVR');
+            else {
+              vrButton.classList.toggle('rule-selected');
+              if (vrButton.classList.contains('rule-selected')){
+                
+              }
+            }
+          })
+
   //play-button
   document.querySelector('.start-game > button')
           .addEventListener('click', () => {
             document.querySelector('#menu-container').style.display = 'none';
             gameGlobalValues.pointerLocker.requestPointerLock();
           });
+
+
 
 
   if (!pointerLockApi) {

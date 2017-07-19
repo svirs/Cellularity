@@ -23,7 +23,7 @@ class CAGame {
 		// this.scene.background = new THREE.Color(0xf0f0f0);
 		this.scene.background = new THREE.Color(0x000000);
 
-		this.camera = this.initCamera(0.1, 1000,);
+		this.camera = this.initCamera(0.1, 1000);
 		this.scene.add(this.camera.yaw);
 
 
@@ -88,6 +88,10 @@ class CAGame {
 		pitch.add(cam);
 		yaw.add(pitch);
 		return {cam, pitch, yaw};
+	}
+
+	init3DCamera(near, far){
+
 	}
 
 

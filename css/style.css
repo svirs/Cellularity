@@ -51,6 +51,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+}
+
+#dimensions-title{
+    align-self: center;
 }
 
 .game-options > .voxel-cube > div {
@@ -60,9 +65,8 @@
   text-align: center;
 }
 
-
-.game-options > .voxel-cube > div > .display {
-  width: 35px;
+.game-options > .voxel-cube > div > span {
+  width: 30px;
   text-align: center;
 }
 
@@ -93,6 +97,9 @@
   color: blue;
   background-color: azure;
   user-select: none;
+  border: 1px grey solid;
+  border-radius: 4px;
+  margin: 2px;
 }
 
 
@@ -124,8 +131,19 @@ div.number-neighbor:hover {
   justify-content: center
 }
 
-.game-options button {
+button {
   padding: 2px 10px;
+  border: 1px solid grey;
+  border-radius: 6px;
+  margin: 5px 5px;
+}
+
+button:hover{
+  background-color: grey;
+}
+
+button:active{
+  background-color: green;
 }
 
 
@@ -143,4 +161,8 @@ div.number-neighbor:hover {
 
 .game-rules button {
   padding: 10px 25px;
+}
+
+a{
+  color: blue;
 }
