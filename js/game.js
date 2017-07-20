@@ -92,7 +92,8 @@ class CAGame {
 	}
 
 	swapCam(d){
-		
+		this.renderer.vr.setDevice(d);
+
 	}
 
 

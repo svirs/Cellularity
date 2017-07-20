@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                   navigator.getVRDisplays().then( d => document.game.swapCam(d[0]));
                 } catch (e) {
-                  alert('no vr support on our browser');
+                  alert('no vr support on your browser');
                 }
               }
             });
