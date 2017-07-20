@@ -317,12 +317,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   //vr-settings
+  let disp = null
   const vrButton = document.querySelector('.vr-settings > button');
   vrButton.addEventListener('click', () => {
+              try {
+                disp.requestPresent([{source: document.game.renderer.domElement}]);
+                document.querySelector('#menu-container').style.display = 'none';
+              } catch (e) {}
               vrButton.classList.toggle('rule-selected');
               if (vrButton.classList.contains('rule-selected')){
                 try {
-                  navigator.getVRDisplays().then( d => document.game.swapCam(d[0]));
+                  navigator.getVRDisplays().then( d => {
+                    disp = d[0]
+                    document.game.swapCam(d[0]);
+                  });
                 } catch (e) {
                   alert('no vr support on your browser');
                 }
@@ -339,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  if (!pointerLockApi) {
+  if (!pointerLockApi || !navigator.getVRDisplays) {
       const infoBox =  document.querySelector('#menu-container');
       infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
       return;

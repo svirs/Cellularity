@@ -166,3 +166,7 @@ button:active{
 a{
   color: blue;
 }
+
+button:focus {
+  background-color: : red;
+}

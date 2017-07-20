@@ -57,6 +57,8 @@ class CAGame {
 		this.isPlaying = false;
 		this.animationId = null;
 		this.tick = 0;
+		this.VRcam = null;
+		this.VRdisplay = null;
 	}
 
 	initCellStore(x, y, z){
@@ -92,8 +94,10 @@ class CAGame {
 	}
 
 	swapCam(d){
+		this.renderer.vr.enabled = true;
+		this.VRcam = true;
+		this.VRdisplay = d;
 		this.renderer.vr.setDevice(d);
-
 	}
 
 
@@ -220,7 +224,12 @@ class CAGame {
 
 
 	animate(){
-		this.animationId = requestAnimationFrame( this.animate.bind(this) );
+		try {
+			this.animationId = this.VRdisplay.requestAnimationFrame( this.animate.bind(this) );
+		} catch (e) {
+
+			requestAnimationFrame( this.animate.bind(this) )
+		}
 
 		if (this.controls.movingForward){
 			this.camera.yaw.translateZ(-this.speed);
