@@ -91,9 +91,11 @@ class CAGame {
 		return {cam, pitch, yaw};
 	}
 
-	init3DCamera(near, far){
-
+	swapCam(d){
+		
 	}
+
+
 
 
 	flipParticle(index){

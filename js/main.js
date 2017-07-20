@@ -319,21 +319,15 @@ document.addEventListener('DOMContentLoaded', () => {
   //vr-settings
   const vrButton = document.querySelector('.vr-settings > button');
   vrButton.addEventListener('click', () => {
-
-
-
-
-            if (navigator.getVRDisplays === undefined){
-              debugger
-              alert('Sorry, your browser does not support WebVR');
-            }
-            else {
               vrButton.classList.toggle('rule-selected');
               if (vrButton.classList.contains('rule-selected')){
-                document.game.swapCam();
+                try {
+                  navigator.getVRDisplays().then( d => document.game.swapCam(d[0]));
+                } catch (e) {
+                  alert('no vr support on our browser');
+                }
               }
-            }
-          })
+            });
 
   //play-button
   document.querySelector('.start-game > button')
