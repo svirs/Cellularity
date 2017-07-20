@@ -4,7 +4,7 @@ class CAGame {
 		this.sliderVariables = {x: length, y: width, z: height};
 
 		this.colors = {
-			deadCell: new THREE.Color(0xff0000),
+			deadCell: new THREE.Color(0xed4e4e),
 			deadCellAlpha: 0.5,
 			deadCellAlphaHide: 0,
 			liveCell: new THREE.Color(0x00ff00),
@@ -21,7 +21,7 @@ class CAGame {
 
 		this.scene = new THREE.Scene();
 		// this.scene.background = new THREE.Color(0xf0f0f0);
-		this.scene.background = new THREE.Color(0x000000);
+		this.scene.background = new THREE.Color(0xf9f9f9);
 
 		this.camera = this.initCamera(0.1, 1000);
 		this.scene.add(this.camera.yaw);
@@ -56,6 +56,7 @@ class CAGame {
 		this.updateSignaled = false;
 		this.isPlaying = false;
 		this.animationId = null;
+		this.tick = 0;
 	}
 
 	initCellStore(x, y, z){
@@ -144,6 +145,7 @@ class CAGame {
 			positions[3 * index] = 3 * x + Math.random();
 			positions[3 * index + 1] = 3 * y + Math.random();
 			positions[3 * index + 2] = 3 * z + Math.random();
+
 			const colorFromState = bit.state ? this.colors.liveCell : this.colors.deadCell;
 			colors[3 * index] = colorFromState.r;
 			colors[3 * index + 1] = colorFromState.g;
@@ -330,6 +332,7 @@ class CAGame {
 			}
 		}
 
+		// (++this.tick < 10 ? false : ((this.tick = 0), true) ) ? this.wiggleParticles() : null;
 	  this.renderer.render(this.scene, this.camera.cam);
 	}
 
@@ -342,6 +345,19 @@ class CAGame {
 			positions[3 * index + 2] *= int;
 		}
 		this.particles.geometry.attributes.position.needsUpdate = true;
+	}
+
+	wiggleParticles(){
+		const positions = this.particles.geometry.attributes.position.array;
+		const [rx, ry, rz] = [Math.random() > .5, Math.random() > .5, Math.random() > .5];
+
+		for(let index = 0; index < positions.byteLength; index++){
+			positions[3 * index] += rx ? -0.005 : 0.005;
+			positions[3 * index + 1] += ry ? -0.005 : 0.005;
+			positions[3 * index + 2] += rz ? -0.005 : 0.005;
+		}
+		this.particles.geometry.attributes.position.needsUpdate = true;
+
 	}
 
 	getCellColors(index, opposite = false){

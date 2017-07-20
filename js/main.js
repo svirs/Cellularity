@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; menuGlobalValues.adjacents >= i; i++){
       const node = numberNeighborTag.cloneNode();
       node.innerHTML = i;
+      node.classList.add(`rule-${i}`);
       node.addEventListener('click', toggleSelected);
       // node.addEventListener('mouseover', toggleSelectedWhenDragging);
 
@@ -179,12 +180,151 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   //presets
+  const gameOfLife = {
+    //Z, Y deltas from bottom left point
+    block: [[1,1], [2,1], [1, 2], [2, 2]],
+    blinker: [[2,1], [2,2], [2,3]],
+    toad: [[1, 2], [1, 3], [1,4], [2, 3], [2, 4], [2, 5]],
+    glider: [[0,2], [1,0], [1,1], [2,1], [2,2]],
+    gun: [
+      [1,4], [1,5], [2,4], [2, 5], [11, 3], [11, 4], [11, 5],
+      [12, 2], [12, 6], [13, 1], [13, 7], [14, 1], [14, 7], [15,4],
+      [16, 2], [16, 6], [17, 3], [17, 4], [17, 5], [18, 4], [21, 5],
+      [21, 6], [21, 7], [22, 5], [22, 6], [22, 7], [23, 4], [23, 8],
+      [25, 3], [25, 4], [25, 8], [25, 9], [35, 6], [35, 7], [36, 6], [36, 7]
+    ],
+    generate: (pos, pattern) => pattern.map(arr => [arr[0] + pos[0], arr[1] + pos[1]])
+  }
+
+  const twoD = {
+    dimensions: [1, 80, 80],
+    birthRules: [3],
+    deathRules: [0, 1, 4, 5, 6, 7, 8],
+    //key also in gameOfLife
+    liveCells: {
+      gun: [[40, 55], [10, 20], [0, 0]],
+      glider: [[30, 0], [31, 65], [23, 16], [56, 50]],
+      toad: [[50, 50], [60, 60], [50, 40]],
+      blinker: [[5, 5], [5, 10], [5, 20], [5, 40], [5, 60]],
+      block: [[20, 20], [30, 30], [40, 40]]
+    }
+  };
+
+  const gun = {
+    dimensions: [1, 80, 80],
+    birthRules: [3],
+    deathRules: [0, 1, 4, 5, 6, 7, 8],
+    //key also in gameOfLife
+    liveCells: {
+      gun: [[10, 65], [10, 40], [10, 15], ]
+    }
+  };
+
+  const steady = {
+    dimensions: [25, 25, 25],
+    birthRules: [0, 12, 13, 14, 26],
+    deathRules: [0, 12, 13, 14, 26],
+    liveCells: {}
+  };
+
+  const wacky = {
+    dimensions: [25, 25, 25],
+    birthRules: [0, 11, 13, 24, 26],
+    deathRules: [6, 11, 15, 22, 26],
+    liveCells: {}
+  };
+
+  const updateCube = (node, options) => {
+    if (node.classList.contains('rule-activated')){
+      //inactivate
+      document.querySelector('#length > input').value = 15;
+      document.querySelector('#length > .display').innerHTML = 15;
+
+      document.querySelector('#width > input').value = 15;
+      document.querySelector('#width > .display').innerHTML = 15;
+
+      document.querySelector('#height > input').value = 15;
+      document.querySelector('#height > .display').innerHTML = 15;
+
+      document.querySelector('.apply-button').click();
+    } else{
+      //activate
+      document.querySelector('#length > input').value = options.dimensions[0];
+      document.querySelector('#length > .display').innerHTML = options.dimensions[0];
+
+      let w = document.querySelector('#width > input');
+      w.max = 200;
+      w.value = options.dimensions[1];
+
+      document.querySelector('#width > .display').innerHTML = options.dimensions[1];
+
+      let h = document.querySelector('#height > input');
+      h.max = 200;
+      h.value = options.dimensions[2];
+      document.querySelector('#height > .display').innerHTML = options.dimensions[2];
+      options.birthRules.forEach(n => {
+        document.querySelector(`.dead-cells .rule-${n}`).classList.toggle('rule-selected');
+      });
+
+      options.deathRules.forEach(n => {
+        document.querySelector(`.live-cells .rule-${n}`).classList.toggle('rule-selected');
+      });
+
+    }
+  }
+
+  const addCreatures = (node, options) => {
+    document.querySelector('.apply-button').click();
+    for (let creature in options.liveCells){
+        options.liveCells[creature].forEach(zyPair => {
+          gameOfLife[creature].map(pair => [zyPair[0] + pair[0], zyPair[1] + pair[1]])
+                                .forEach(finalCoord => document.game.cellStore.flipCellState(0,...finalCoord.reverse()));
+        });
+    }
+    document.game.updateCells();
+  }
+
+
+
+
+  document.querySelectorAll('.presets > button')
+          .forEach( node => {
+            node.addEventListener('click', ()=>{
+              deselect('.dead-cells');
+              deselect('.live-cells');
+              switch (node.name) {
+                case '2d':
+                  updateCube(node, twoD);
+                  addCreatures(node, twoD);
+                  break;
+                case 'gun':
+                  updateCube(node, gun);
+                  addCreatures(node, gun);
+                  break;
+                case 'steady':
+                  updateCube(node, steady);
+                  document.querySelector('.apply-button').click();
+                  break;
+                case 'wacky':
+                  updateCube(node, wacky);
+                  document.querySelector('.apply-button').click();
+                  break;
+                default:
+                  break;
+              }
+            })
+          });
 
 
   //vr-settings
   const vrButton = document.querySelector('.vr-settings > button');
   vrButton.addEventListener('click', () => {
+
+
+
+
             if (navigator.getVRDisplays === undefined){
+              debugger
               alert('Sorry, your browser does not support WebVR');
             }
             else {
