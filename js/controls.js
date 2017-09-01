@@ -73,7 +73,7 @@ class Movement {
 
 
 
-      document.addEventListener('keyup', (e) => {
+      window.addEventListener('keyup', (e) => {
         switch (e.key) {
           case 'w':
           case 'W':
@@ -133,7 +133,7 @@ class Movement {
         }
       });
 false
-      document.addEventListener('keydown', (e) => {
+      window.addEventListener('keydown', (e) => {
         switch (e.key) {
           case 'w':
             this.movingForward = true;
