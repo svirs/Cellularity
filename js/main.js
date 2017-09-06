@@ -26,7 +26,7 @@ const pointerLockApi = ( () => {
     return null;
   }
 } )();
-//
+
 const gameGlobalValues = {
   canMove: false,
   pointerLocker: document.body,
