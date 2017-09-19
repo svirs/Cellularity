@@ -1,6 +1,6 @@
 # 3d Cellular Automata
 
-[Live Link](shur.singh.codes/cellularity)
+[Live Link](http://shur.singh.codes/Cellularity/)
 
 
 Uses three.js
