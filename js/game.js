@@ -21,7 +21,7 @@ class CAGame {
 
 		this.scene = new THREE.Scene();
 		// this.scene.background = new THREE.Color(0xf0f0f0);
-		this.scene.background = new THREE.Color(0x010101);
+		this.scene.background = new THREE.Color(0xf9f9f9);
 
 		this.camera = this.initCamera(0.1, 1000);
 		this.scene.add(this.camera.yaw);
