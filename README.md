@@ -14,12 +14,13 @@ Select a pre-made set of rules and dimensions or create your own scenerio by sel
 
 ## Controls
 **ESC** to open the menu
-**WASD** to move
-**SHIFT** to sink
-**SPACEBAR** to float up
-**F** to step one iteration
-**G** to animate (quickly as possible)
-**H** to hide dead cells
+
+**WASD** to move  
+**SHIFT** to sink  
+**SPACEBAR** to float up  
+**F** to step one iteration  
+**G** to animate (quickly as possible)  
+**H** to hide dead cells  
 
 The camera is controlled by the mouse and you may directly click on cells to manually change their state.
 
