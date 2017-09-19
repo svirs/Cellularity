@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //buttons
   const deselect = className => {
     if (className === '.dead-cells'){
+      debugger
       document.game.rules.deathWhen = [];
     } else if (className === '.live-cells') {
       document.game.rules.birthWhen = [];
@@ -345,15 +346,17 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
 
-
-
-  if (!pointerLockApi || !navigator.getVRDisplays) {
-      const infoBox =  document.querySelector('#menu-container');
-      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+  const cannotInit = (str) => document.querySelector('#menu-container').innerHTML = str;
+  
+  if (!pointerLockApi) {
+      const err = "Unfortunately, your browser does not<br/>support the Point Lock API. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+      cannotInit(err);
       return;
   } else if (!window.WebGLRenderingContext){
-      const infoBox =  document.querySelector('#menu-container');
-      infoBox.innerHTML = "Unfortunately, your browser does not<br/>support WebGL. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+      const err = "Unfortunately, your browser does not<br/>support WebGL. Please<br/>consider upgrading to the latest version<br/>of your browser.";
+      cannotInit(err);  
+      return;
+  //VR CHECK
   } else {
       startGame();
   }

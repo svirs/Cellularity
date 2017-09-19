@@ -388,7 +388,3 @@ class CAGame {
 	}
 }
 
-// document.game.particles.geometry.attributes.offset.array.forEach( (o,i) => {
-//     let p = document.game.particles.geometry.attributes.position.array;
-//     console.log(i, o, p[i], p[i+1], p[i+2], '--', ...document.game.cellStore._offsetToIndex(o), document.game.cellStore._indexToOffset(p[i], p[i+1], p[i+2]))
-// });

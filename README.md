@@ -1,5 +1,8 @@
 # 3d Cellular Automata
 
+[Live Link](shur.singh.codes/cellularity)
+
+
 Uses three.js
 
 user controls camera
