@@ -1,5 +1,6 @@
 # 3d Cellular Automata
 ![Cellularity](./media/screenshot.png)
+![Cellularity](./media/vr.png)
 
 [Live link](http://shur.singh.codes/Cellularity/)
 
@@ -11,7 +12,7 @@ A cell will live or dies based on how many of its 26 immediate neighbors around 
 ## Instructions
 Select a pre-made set of rules and dimensions or create your own scenerio by selecting the size of the cube of cells and selecting a series of rules for determining their new state.
 
-## ControlsONTROLS 
+## Controls
 **ESC** to open the menu
 **WASD** to move
 **SHIFT** to sink
