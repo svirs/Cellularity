@@ -24,6 +24,8 @@ Select a pre-made set of rules and dimensions or create your own scenerio by sel
 
 The camera is controlled by the mouse and you may directly click on cells to manually change their state.
 
+## WebVR
+A compatible WebVR device such as a smartphone (with the latest Chrome browser update) can also view the simulation in 3d!
 
 ## Technologies
 - [THREE.js](https://threejs.org/) WebGL javascript library
