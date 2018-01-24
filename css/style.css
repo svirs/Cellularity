@@ -182,10 +182,3 @@ button:focus {
   background-color: : red;
 }
 
-div.vr-settings {
-  display: none;
-}
-
-div.presets {
- margin-bottom: 20px; 
-}
